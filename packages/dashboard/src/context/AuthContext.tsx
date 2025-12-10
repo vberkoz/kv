@@ -9,6 +9,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
@@ -45,13 +46,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser({ userId: decoded.userId, email: decoded.email, plan: decoded.plan });
   };
 
+  const signup = async (email: string, password: string) => {
+    const res = await fetch('/api/v1/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    if (!res.ok) throw new Error('Signup failed');
+    const data = await res.json();
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('apiKey', data.apiKey);
+    const decoded = JSON.parse(atob(data.token.split('.')[1]));
+    setUser({ userId: decoded.userId, email: decoded.email, plan: decoded.plan });
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
