@@ -1,5 +1,6 @@
 import { UpdateCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient, TABLE_NAME } from './dynamodb';
+import { sendUsageAlert } from '../send-usage-alert';
 
 const PLAN_LIMITS = {
   free: { requests: 100000, storage: 25 * 1024 * 1024 * 1024 },
@@ -7,10 +8,10 @@ const PLAN_LIMITS = {
   scale: { requests: 10000000, storage: 500 * 1024 * 1024 * 1024 }
 };
 
-export async function incrementRequestCount(userId: string): Promise<void> {
+export async function incrementRequestCount(userId: string, email: string, plan: string): Promise<void> {
   const month = new Date().toISOString().slice(0, 7);
   
-  await docClient.send(new UpdateCommand({
+  const result = await docClient.send(new UpdateCommand({
     TableName: TABLE_NAME,
     Key: {
       PK: `USER#${userId}`,
@@ -20,8 +21,17 @@ export async function incrementRequestCount(userId: string): Promise<void> {
     ExpressionAttributeValues: {
       ':inc': 1,
       ':now': new Date().toISOString()
-    }
+    },
+    ReturnValues: 'ALL_NEW'
   }));
+
+  const requestCount = result.Attributes?.requestCount || 0;
+  const limit = PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS]?.requests || PLAN_LIMITS.free.requests;
+  const percent = (requestCount / limit) * 100;
+  
+  if (percent >= 80 && percent < 81 && email) {
+    await sendUsageAlert(email, Math.floor(percent), plan);
+  }
 }
 
 export async function checkRateLimit(userId: string, plan: string): Promise<boolean> {

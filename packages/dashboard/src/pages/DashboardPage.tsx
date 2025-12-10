@@ -1,10 +1,13 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { UsageStats } from '../components/UsageStats';
 import { ApiKeyDisplay } from '../components/ApiKeyDisplay';
+import { UpgradePrompt } from '../components/UpgradePrompt';
 import { Link } from 'react-router-dom';
 
 export default function DashboardPage() {
   const { logout } = useAuth();
+  const [usage, setUsage] = useState<any>(null);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -26,8 +29,9 @@ export default function DashboardPage() {
       </nav>
       <div className="max-w-6xl mx-auto p-6">
         <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+        {usage && <UpgradePrompt usage={usage.usage} limits={usage.limits} />}
         <div className="grid md:grid-cols-2 gap-6 mb-6">
-          <UsageStats />
+          <UsageStats onUsageLoad={setUsage} />
           <ApiKeyDisplay />
         </div>
         <div className="bg-white p-6 rounded-lg shadow">

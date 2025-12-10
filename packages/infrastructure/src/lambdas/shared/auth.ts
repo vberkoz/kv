@@ -28,7 +28,7 @@ export async function validateApiKey(apiKey: string): Promise<AuthenticatedUser>
     throw new Error('RateLimitExceeded');
   }
   
-  await incrementRequestCount(user.userId);
+  await incrementRequestCount(user.userId, user.email, user.plan);
   
   return {
     userId: user.userId,

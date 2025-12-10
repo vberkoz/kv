@@ -6,7 +6,11 @@ interface Usage {
   plan: string;
 }
 
-export function UsageStats() {
+interface UsageStatsProps {
+  onUsageLoad?: (usage: Usage) => void;
+}
+
+export function UsageStats({ onUsageLoad }: UsageStatsProps) {
   const [usage, setUsage] = useState<Usage | null>(null);
 
   useEffect(() => {
@@ -17,9 +21,10 @@ export function UsageStats() {
       });
       const data = await res.json();
       setUsage(data);
+      if (onUsageLoad) onUsageLoad(data);
     };
     fetchUsage();
-  }, []);
+  }, [onUsageLoad]);
 
   if (!usage) return <div>Loading...</div>;
 

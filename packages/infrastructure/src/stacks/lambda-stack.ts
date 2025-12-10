@@ -3,6 +3,9 @@ import { Construct } from 'constructs';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
+import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
+import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
+import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 
 interface LambdaStackProps extends StackProps {
   table: Table;
@@ -20,6 +23,7 @@ export class LambdaStack extends Stack {
   public readonly generateApiKey: NodejsFunction;
   public readonly getUsage: NodejsFunction;
   public readonly paddleWebhook: NodejsFunction;
+  public readonly resetUsage: NodejsFunction;
 
   constructor(scope: Construct, id: string, props: LambdaStackProps) {
     super(scope, id, props);
@@ -145,5 +149,34 @@ export class LambdaStack extends Stack {
     });
 
     props.table.grantReadWriteData(this.paddleWebhook);
+
+    this.resetUsage = new NodejsFunction(this, 'ResetUsageFunction', {
+      entry: 'src/lambdas/reset-usage.ts',
+      handler: 'handler',
+      runtime: Runtime.NODEJS_18_X,
+      timeout: Duration.minutes(5),
+      environment,
+      bundling
+    });
+
+    props.table.grantReadWriteData(this.resetUsage);
+
+    this.getValue.addToRolePolicy(new PolicyStatement({
+      actions: ['ses:SendEmail'],
+      resources: ['*']
+    }));
+    this.putValue.addToRolePolicy(new PolicyStatement({
+      actions: ['ses:SendEmail'],
+      resources: ['*']
+    }));
+    this.deleteValue.addToRolePolicy(new PolicyStatement({
+      actions: ['ses:SendEmail'],
+      resources: ['*']
+    }));
+
+    const resetRule = new Rule(this, 'MonthlyResetRule', {
+      schedule: Schedule.cron({ day: '1', hour: '0', minute: '0' })
+    });
+    resetRule.addTarget(new LambdaFunction(this.resetUsage));
   }
 }
