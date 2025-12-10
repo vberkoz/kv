@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "build": "tsc",
-    "synth": "cdk synth",
-    "deploy": "cdk deploy --all",
+    "synth": "cdk synth --profile basil",
+    "deploy": "cdk deploy --all --profile basil",
     "clean": "rm -rf dist cdk.out"
   },
   "dependencies": {

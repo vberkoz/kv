@@ -50,7 +50,7 @@ pnpm build
 ### 3. Bootstrap CDK (First Time Only)
 ```bash
 cd packages/infrastructure
-npx cdk bootstrap
+npx cdk bootstrap --profile basil
 ```
 
 ### 4. Deploy Infrastructure
@@ -70,12 +70,14 @@ This deploys:
 # Get API URL from CloudFormation outputs
 aws cloudformation describe-stacks \
   --stack-name KVApiStack \
-  --query 'Stacks[0].Outputs'
+  --query 'Stacks[0].Outputs' \
+  --profile basil
 
 # Get CloudFront URL
 aws cloudformation describe-stacks \
   --stack-name KVFrontendStack \
-  --query 'Stacks[0].Outputs'
+  --query 'Stacks[0].Outputs' \
+  --profile basil
 ```
 
 ### 6. Configure DNS
@@ -87,8 +89,8 @@ api.kv.vberkoz.com → API Gateway URL
 
 ### 7. Verify SES Email
 ```bash
-aws ses verify-email-identity --email-address noreply@kv.vberkoz.com
-aws ses verify-email-identity --email-address alerts@kv.vberkoz.com
+aws ses verify-email-identity --email-address noreply@kv.vberkoz.com --profile basil
+aws ses verify-email-identity --email-address alerts@kv.vberkoz.com --profile basil
 ```
 
 ## Update Deployment
@@ -114,12 +116,12 @@ pnpm deploy:all
 ### Rollback to Previous Version
 ```bash
 cd packages/infrastructure
-cdk deploy --previous
+cdk deploy --previous --profile basil
 ```
 
 ### Rollback Specific Stack
 ```bash
-cdk deploy KVLambdaStack --previous
+cdk deploy KVLambdaStack --previous --profile basil
 ```
 
 ### Emergency Rollback
@@ -128,11 +130,12 @@ cdk deploy KVLambdaStack --previous
 ```bash
 aws cloudformation describe-stack-events \
   --stack-name KVLambdaStack \
-  --max-items 20
+  --max-items 20 \
+  --profile basil
 ```
 3. Rollback:
 ```bash
-cdk deploy --previous
+cdk deploy --previous --profile basil
 ```
 4. Verify rollback successful
 5. Communicate to users
@@ -159,10 +162,10 @@ Alarms send notifications to: alerts@kv.vberkoz.com
 ### View Logs
 ```bash
 # API Gateway logs
-aws logs tail /aws/apigateway/KVStorageApi --follow
+aws logs tail /aws/apigateway/KVStorageApi --follow --profile basil
 
 # Lambda logs
-aws logs tail /aws/lambda/KVLambdaStack-GetValueFunction --follow
+aws logs tail /aws/lambda/KVLambdaStack-GetValueFunction --follow --profile basil
 ```
 
 ## Load Testing
@@ -187,14 +190,16 @@ Manual backup:
 ```bash
 aws dynamodb create-backup \
   --table-name KVStorageTable \
-  --backup-name kv-backup-$(date +%Y%m%d)
+  --backup-name kv-backup-$(date +%Y%m%d) \
+  --profile basil
 ```
 
 ### Restore from Backup
 ```bash
 aws dynamodb restore-table-from-backup \
   --target-table-name KVStorageTable-Restored \
-  --backup-arn arn:aws:dynamodb:...
+  --backup-arn arn:aws:dynamodb:... \
+  --profile basil
 ```
 
 ## Cost Optimization
@@ -204,7 +209,8 @@ aws dynamodb restore-table-from-backup \
 aws ce get-cost-and-usage \
   --time-period Start=2024-01-01,End=2024-01-31 \
   --granularity MONTHLY \
-  --metrics BlendedCost
+  --metrics BlendedCost \
+  --profile basil
 ```
 
 ### Expected Costs (Free Tier)
@@ -235,7 +241,8 @@ Invalidate cache:
 ```bash
 aws cloudfront create-invalidation \
   --distribution-id EXXXXXXXXXXXXX \
-  --paths "/*"
+  --paths "/*" \
+  --profile basil
 ```
 
 ## Security Checklist
