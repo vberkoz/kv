@@ -11,10 +11,12 @@
     "deploy:infra": "pnpm --filter infrastructure deploy",
     "deploy:frontend": "pnpm --filter landing build && pnpm --filter dashboard build",
     "deploy:all": "pnpm build:frontend && pnpm --filter infrastructure deploy",
+    "loadtest": "artillery run artillery.yml",
     "clean": "pnpm -r clean && rm -rf node_modules"
   },
   "devDependencies": {
     "typescript": "^5.0.0",
-    "@types/node": "^20.0.0"
+    "@types/node": "^20.0.0",
+    "artillery": "^2.0.0"
   }
 }

@@ -1,0 +1,39 @@
+config:
+  target: 'https://api.kv.vberkoz.com'
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: 'Warm up'
+    - duration: 120
+      arrivalRate: 50
+      name: 'Sustained load'
+    - duration: 60
+      arrivalRate: 100
+      name: 'Peak load'
+  defaults:
+    headers:
+      Authorization: 'Bearer {{ $env.API_KEY }}'
+      Content-Type: 'application/json'
+
+scenarios:
+  - name: 'PUT and GET operations'
+    weight: 70
+    flow:
+      - put:
+          url: '/v1/loadtest/key-{{ $randomNumber() }}'
+          json:
+            value:
+              timestamp: '{{ $timestamp() }}'
+              data: 'test-data-{{ $randomString() }}'
+      - get:
+          url: '/v1/loadtest/key-{{ $randomNumber() }}'
+      - think: 1
+
+  - name: 'List and DELETE operations'
+    weight: 30
+    flow:
+      - get:
+          url: '/v1/loadtest?prefix=key-'
+      - delete:
+          url: '/v1/loadtest/key-{{ $randomNumber() }}'
+      - think: 2

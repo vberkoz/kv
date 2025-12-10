@@ -3,6 +3,7 @@ import { DatabaseStack } from './stacks/database-stack';
 import { LambdaStack } from './stacks/lambda-stack';
 import { ApiStack } from './stacks/api-stack';
 import { FrontendStack } from './stacks/frontend-stack';
+import { MonitoringStack } from './stacks/monitoring-stack';
 
 const app = new App();
 
@@ -51,5 +52,18 @@ const frontendStack = new FrontendStack(app, 'KVFrontendStack', {
 });
 
 frontendStack.addDependency(apiStack);
+
+const monitoringStack = new MonitoringStack(app, 'KVMonitoringStack', {
+  api: apiStack.api,
+  getValue: lambdaStack.getValue,
+  putValue: lambdaStack.putValue,
+  deleteValue: lambdaStack.deleteValue,
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION || 'us-east-1'
+  }
+});
+
+monitoringStack.addDependency(apiStack);
 
 app.synth();
