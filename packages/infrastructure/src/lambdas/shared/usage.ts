@@ -3,9 +3,11 @@ import { docClient, TABLE_NAME } from './dynamodb';
 import { sendUsageAlert } from '../send-usage-alert';
 
 const PLAN_LIMITS = {
-  free: { requests: 100000, storage: 25 * 1024 * 1024 * 1024 },
+  free: { requests: 100000, storage: 10 * 1024 * 1024 * 1024 },
+  starter: { requests: 500000, storage: 25 * 1024 * 1024 * 1024 },
   pro: { requests: 1000000, storage: 100 * 1024 * 1024 * 1024 },
-  scale: { requests: 10000000, storage: 500 * 1024 * 1024 * 1024 }
+  scale: { requests: 5000000, storage: 250 * 1024 * 1024 * 1024 },
+  business: { requests: 20000000, storage: 1024 * 1024 * 1024 * 1024 }
 };
 
 export async function incrementRequestCount(userId: string, email: string, plan: string): Promise<void> {

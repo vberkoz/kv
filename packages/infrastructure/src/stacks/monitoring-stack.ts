@@ -2,14 +2,14 @@ import { Stack, StackProps, Duration } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { Dashboard, GraphWidget, Metric } from 'aws-cdk-lib/aws-cloudwatch';
 import { Alarm, ComparisonOperator, TreatMissingData } from 'aws-cdk-lib/aws-cloudwatch';
-import { RestApi } from 'aws-cdk-lib/aws-apigateway';
+import { HttpApi } from 'aws-cdk-lib/aws-apigatewayv2';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { SnsAction } from 'aws-cdk-lib/aws-cloudwatch-actions';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
 
 interface MonitoringStackProps extends StackProps {
-  api: RestApi;
+  api: HttpApi;
   getValue: NodejsFunction;
   putValue: NodejsFunction;
   deleteValue: NodejsFunction;

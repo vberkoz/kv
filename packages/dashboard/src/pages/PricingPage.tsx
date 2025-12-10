@@ -51,28 +51,47 @@ export default function PricingPage() {
     {
       name: 'Free',
       price: '$0',
-      storage: '25GB',
+      storage: '10GB',
       requests: '100K',
-      features: ['Basic support', 'Community access'],
+      features: ['Community support', 'Basic analytics'],
       current: user?.plan === 'free'
     },
     {
+      name: 'Starter',
+      price: '$5',
+      storage: '25GB',
+      requests: '500K',
+      features: ['Email support', 'Advanced analytics'],
+      priceId: process.env.VITE_PADDLE_STARTER_PRICE_ID,
+      current: user?.plan === 'starter'
+    },
+    {
       name: 'Pro',
-      price: '$10',
+      price: '$15',
       storage: '100GB',
       requests: '1M',
-      features: ['Priority support', 'Advanced analytics'],
+      features: ['Priority support', 'Custom domains'],
       priceId: process.env.VITE_PADDLE_PRO_PRICE_ID,
-      current: user?.plan === 'pro'
+      current: user?.plan === 'pro',
+      popular: true
     },
     {
       name: 'Scale',
-      price: '$30',
-      storage: '500GB',
-      requests: '10M',
-      features: ['24/7 support', 'Custom integrations', 'SLA guarantee'],
+      price: '$49',
+      storage: '250GB',
+      requests: '5M',
+      features: ['SLA 99.9%', 'Dedicated support'],
       priceId: process.env.VITE_PADDLE_SCALE_PRICE_ID,
       current: user?.plan === 'scale'
+    },
+    {
+      name: 'Business',
+      price: '$149',
+      storage: '1TB',
+      requests: '20M',
+      features: ['SLA 99.95%', 'Custom integrations', 'White-label'],
+      priceId: process.env.VITE_PADDLE_BUSINESS_PRICE_ID,
+      current: user?.plan === 'business'
     }
   ];
 
@@ -93,10 +112,11 @@ export default function PricingPage() {
       </nav>
       <div className="max-w-6xl mx-auto p-6">
         <h1 className="text-3xl font-bold mb-8 text-center">Pricing Plans</h1>
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-4">
           {plans.map((plan) => (
-            <div key={plan.name} className={`bg-white p-6 rounded-lg shadow ${plan.current ? 'ring-2 ring-blue-600' : ''}`}>
+            <div key={plan.name} className={`bg-white p-6 rounded-lg shadow ${plan.current ? 'ring-2 ring-blue-600' : ''} ${plan.popular ? 'ring-2 ring-green-500' : ''}`}>
               {plan.current && <div className="text-blue-600 font-semibold mb-2">Current Plan</div>}
+              {plan.popular && !plan.current && <div className="text-green-600 font-semibold mb-2">Most Popular</div>}
               <h2 className="text-2xl font-bold mb-2">{plan.name}</h2>
               <div className="text-3xl font-bold mb-4">{plan.price}<span className="text-lg text-gray-600">/mo</span></div>
               <div className="mb-4">

@@ -1,6 +1,7 @@
 import { Stack, StackProps, CfnOutput } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { RestApi, LambdaIntegration, Cors } from 'aws-cdk-lib/aws-apigateway';
+import { HttpApi, HttpMethod, CorsHttpMethod } from 'aws-cdk-lib/aws-apigatewayv2';
+import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 
 interface ApiStackProps extends StackProps {
@@ -18,51 +19,89 @@ interface ApiStackProps extends StackProps {
 }
 
 export class ApiStack extends Stack {
-  public readonly api: RestApi;
+  public readonly api: HttpApi;
 
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
 
-    this.api = new RestApi(this, 'KVStorageApi', {
-      restApiName: 'KV Storage API',
+    this.api = new HttpApi(this, 'KVStorageApi', {
+      apiName: 'KV Storage API',
       description: 'Serverless key-value storage API',
-      defaultCorsPreflightOptions: {
-        allowOrigins: Cors.ALL_ORIGINS,
-        allowMethods: Cors.ALL_METHODS,
+      corsPreflight: {
+        allowOrigins: ['*'],
+        allowMethods: [CorsHttpMethod.ANY],
         allowHeaders: ['Content-Type', 'Authorization']
       }
     });
 
-    const v1 = this.api.root.addResource('v1');
+    this.api.addRoutes({
+      path: '/v1/auth/signup',
+      methods: [HttpMethod.POST],
+      integration: new HttpLambdaIntegration('SignupIntegration', props.signup)
+    });
+
+    this.api.addRoutes({
+      path: '/v1/auth/login',
+      methods: [HttpMethod.POST],
+      integration: new HttpLambdaIntegration('LoginIntegration', props.login)
+    });
     
-    const auth = v1.addResource('auth');
-    auth.addResource('signup').addMethod('POST', new LambdaIntegration(props.signup));
-    auth.addResource('login').addMethod('POST', new LambdaIntegration(props.login));
+    this.api.addRoutes({
+      path: '/v1/api-keys',
+      methods: [HttpMethod.POST],
+      integration: new HttpLambdaIntegration('GenerateApiKeyIntegration', props.generateApiKey)
+    });
+
+    this.api.addRoutes({
+      path: '/v1/usage',
+      methods: [HttpMethod.GET],
+      integration: new HttpLambdaIntegration('GetUsageIntegration', props.getUsage)
+    });
     
-    const apiKeys = v1.addResource('api-keys');
-    apiKeys.addMethod('POST', new LambdaIntegration(props.generateApiKey));
+    this.api.addRoutes({
+      path: '/v1/webhooks/paddle',
+      methods: [HttpMethod.POST],
+      integration: new HttpLambdaIntegration('PaddleWebhookIntegration', props.paddleWebhook)
+    });
     
-    const usage = v1.addResource('usage');
-    usage.addMethod('GET', new LambdaIntegration(props.getUsage));
+    this.api.addRoutes({
+      path: '/v1/namespaces',
+      methods: [HttpMethod.POST],
+      integration: new HttpLambdaIntegration('CreateNamespaceIntegration', props.createNamespace)
+    });
+
+    this.api.addRoutes({
+      path: '/v1/namespaces',
+      methods: [HttpMethod.GET],
+      integration: new HttpLambdaIntegration('ListNamespacesIntegration', props.listNamespaces)
+    });
     
-    const webhooks = v1.addResource('webhooks');
-    const paddle = webhooks.addResource('paddle');
-    paddle.addMethod('POST', new LambdaIntegration(props.paddleWebhook));
+    this.api.addRoutes({
+      path: '/v1/{namespace}',
+      methods: [HttpMethod.GET],
+      integration: new HttpLambdaIntegration('ListKeysIntegration', props.listKeys)
+    });
     
-    const namespaces = v1.addResource('namespaces');
-    namespaces.addMethod('POST', new LambdaIntegration(props.createNamespace));
-    namespaces.addMethod('GET', new LambdaIntegration(props.listNamespaces));
-    
-    const namespace = v1.addResource('{namespace}');
-    namespace.addMethod('GET', new LambdaIntegration(props.listKeys));
-    
-    const key = namespace.addResource('{key}');
-    key.addMethod('GET', new LambdaIntegration(props.getValue));
-    key.addMethod('PUT', new LambdaIntegration(props.putValue));
-    key.addMethod('DELETE', new LambdaIntegration(props.deleteValue));
+    this.api.addRoutes({
+      path: '/v1/{namespace}/{key}',
+      methods: [HttpMethod.GET],
+      integration: new HttpLambdaIntegration('GetValueIntegration', props.getValue)
+    });
+
+    this.api.addRoutes({
+      path: '/v1/{namespace}/{key}',
+      methods: [HttpMethod.PUT],
+      integration: new HttpLambdaIntegration('PutValueIntegration', props.putValue)
+    });
+
+    this.api.addRoutes({
+      path: '/v1/{namespace}/{key}',
+      methods: [HttpMethod.DELETE],
+      integration: new HttpLambdaIntegration('DeleteValueIntegration', props.deleteValue)
+    });
 
     new CfnOutput(this, 'ApiUrl', {
-      value: this.api.url,
+      value: this.api.apiEndpoint,
       description: 'API Gateway URL'
     });
   }

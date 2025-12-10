@@ -2,12 +2,12 @@ import { Stack, StackProps, RemovalPolicy, CfnOutput } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Distribution, ViewerProtocolPolicy, AllowedMethods, CachePolicy } from 'aws-cdk-lib/aws-cloudfront';
-import { S3Origin, RestApiOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
+import { S3Origin, HttpOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
-import { RestApi } from 'aws-cdk-lib/aws-apigateway';
+import { HttpApi } from 'aws-cdk-lib/aws-apigatewayv2';
 
 interface FrontendStackProps extends StackProps {
-  api: RestApi;
+  api: HttpApi;
 }
 
 export class FrontendStack extends Stack {
@@ -21,6 +21,8 @@ export class FrontendStack extends Stack {
       removalPolicy: RemovalPolicy.DESTROY
     });
 
+    const apiUrl = props.api.apiEndpoint.replace('https://', '');
+
     const distribution = new Distribution(this, 'Distribution', {
       defaultBehavior: {
         origin: new S3Origin(bucket),
@@ -28,7 +30,7 @@ export class FrontendStack extends Stack {
       },
       additionalBehaviors: {
         '/api/*': {
-          origin: new RestApiOrigin(props.api),
+          origin: new HttpOrigin(apiUrl),
           viewerProtocolPolicy: ViewerProtocolPolicy.HTTPS_ONLY,
           allowedMethods: AllowedMethods.ALLOW_ALL,
           cachePolicy: CachePolicy.CACHING_DISABLED
