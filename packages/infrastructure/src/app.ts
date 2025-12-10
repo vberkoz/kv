@@ -2,6 +2,7 @@ import { App } from 'aws-cdk-lib';
 import { DatabaseStack } from './stacks/database-stack';
 import { LambdaStack } from './stacks/lambda-stack';
 import { ApiStack } from './stacks/api-stack';
+import { FrontendStack } from './stacks/frontend-stack';
 
 const app = new App();
 
@@ -39,5 +40,15 @@ const apiStack = new ApiStack(app, 'KVApiStack', {
 
 lambdaStack.addDependency(databaseStack);
 apiStack.addDependency(lambdaStack);
+
+const frontendStack = new FrontendStack(app, 'KVFrontendStack', {
+  api: apiStack.api,
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION || 'us-east-1'
+  }
+});
+
+frontendStack.addDependency(apiStack);
 
 app.synth();

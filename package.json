@@ -6,8 +6,10 @@
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm -r dev",
+    "build:frontend": "pnpm --filter landing build && pnpm --filter dashboard build",
     "deploy:infra": "pnpm --filter infrastructure deploy",
     "deploy:frontend": "pnpm --filter landing build && pnpm --filter dashboard build",
+    "deploy:all": "pnpm build:frontend && pnpm --filter infrastructure deploy",
     "clean": "pnpm -r clean && rm -rf node_modules"
   },
   "devDependencies": {
