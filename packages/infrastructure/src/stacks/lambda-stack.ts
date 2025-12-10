@@ -18,6 +18,7 @@ export class LambdaStack extends Stack {
   public readonly signup: NodejsFunction;
   public readonly login: NodejsFunction;
   public readonly generateApiKey: NodejsFunction;
+  public readonly getUsage: NodejsFunction;
 
   constructor(scope: Construct, id: string, props: LambdaStackProps) {
     super(scope, id, props);
@@ -112,6 +113,15 @@ export class LambdaStack extends Stack {
       bundling
     });
 
+    this.getUsage = new NodejsFunction(this, 'GetUsageFunction', {
+      entry: 'src/lambdas/get-usage.ts',
+      handler: 'handler',
+      runtime: Runtime.NODEJS_18_X,
+      timeout: Duration.seconds(10),
+      environment,
+      bundling
+    });
+
     props.table.grantReadWriteData(this.getValue);
     props.table.grantReadWriteData(this.putValue);
     props.table.grantReadWriteData(this.deleteValue);
@@ -121,5 +131,6 @@ export class LambdaStack extends Stack {
     props.table.grantReadWriteData(this.signup);
     props.table.grantReadData(this.login);
     props.table.grantReadWriteData(this.generateApiKey);
+    props.table.grantReadData(this.getUsage);
   }
 }

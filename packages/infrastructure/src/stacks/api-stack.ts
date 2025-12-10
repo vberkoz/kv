@@ -13,6 +13,7 @@ interface ApiStackProps extends StackProps {
   signup: NodejsFunction;
   login: NodejsFunction;
   generateApiKey: NodejsFunction;
+  getUsage: NodejsFunction;
 }
 
 export class ApiStack extends Stack {
@@ -39,6 +40,9 @@ export class ApiStack extends Stack {
     
     const apiKeys = v1.addResource('api-keys');
     apiKeys.addMethod('POST', new LambdaIntegration(props.generateApiKey));
+    
+    const usage = v1.addResource('usage');
+    usage.addMethod('GET', new LambdaIntegration(props.getUsage));
     
     const namespaces = v1.addResource('namespaces');
     namespaces.addMethod('POST', new LambdaIntegration(props.createNamespace));

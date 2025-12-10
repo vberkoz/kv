@@ -30,6 +30,7 @@ const apiStack = new ApiStack(app, 'KVApiStack', {
   signup: lambdaStack.signup,
   login: lambdaStack.login,
   generateApiKey: lambdaStack.generateApiKey,
+  getUsage: lambdaStack.getUsage,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION || 'us-east-1'

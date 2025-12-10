@@ -2,7 +2,7 @@ import { APIGatewayEvent, APIResponse } from '@kv/shared';
 import { GetCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient, TABLE_NAME } from './shared/dynamodb';
 import { validateApiKey } from './shared/auth';
-import { successResponse, errorResponse } from './shared/response';
+import { successResponse, errorResponse, rateLimitResponse } from './shared/response';
 
 export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
   try {
@@ -34,6 +34,9 @@ export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
   } catch (error: any) {
     if (error.message === 'Unauthorized') {
       return errorResponse('Invalid API key', 401);
+    }
+    if (error.message === 'RateLimitExceeded') {
+      return rateLimitResponse();
     }
     return errorResponse('Internal server error', 500);
   }
