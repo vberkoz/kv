@@ -1,0 +1,19 @@
+<section class="py-20 px-4">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-3xl font-bold text-center mb-12">Quick Start</h2>
+    <div class="bg-gray-900 text-white p-6 rounded-lg">
+      <pre class="overflow-x-auto"><code>{`// Store a value
+await fetch('https://api.kv.vberkoz.com/v1/myapp/user:123', {
+  method: 'PUT',
+  headers: { 'Authorization': 'Bearer YOUR_API_KEY' },
+  body: JSON.stringify({ value: { name: 'John' } })
+});
+
+// Retrieve a value
+const res = await fetch('https://api.kv.vberkoz.com/v1/myapp/user:123', {
+  headers: { 'Authorization': 'Bearer YOUR_API_KEY' }
+});
+const data = await res.json();`}</code></pre>
+    </div>
+  </div>
+</section>
