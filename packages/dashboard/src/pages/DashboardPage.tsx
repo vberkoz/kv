@@ -13,6 +13,7 @@ export default function DashboardPage() {
           <div className="flex gap-6">
             <Link to="/dashboard" className="text-xl font-bold">KV Storage</Link>
             <Link to="/namespaces" className="text-gray-600 hover:text-gray-900">Namespaces</Link>
+            <Link to="/explorer" className="text-gray-600 hover:text-gray-900">API Explorer</Link>
           </div>
           <button
             onClick={logout}

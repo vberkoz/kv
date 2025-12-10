@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import DashboardPage from './pages/DashboardPage';
 import NamespacesPage from './pages/NamespacesPage';
+import ApiExplorerPage from './pages/ApiExplorerPage';
 
 function App() {
   return (
@@ -27,6 +28,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <NamespacesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/explorer"
+            element={
+              <ProtectedRoute>
+                <ApiExplorerPage />
               </ProtectedRoute>
             }
           />
