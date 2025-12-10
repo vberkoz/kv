@@ -1,0 +1,17 @@
+{
+  "name": "kv-storage",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm -r dev",
+    "deploy:infra": "pnpm --filter infrastructure deploy",
+    "deploy:frontend": "pnpm --filter landing build && pnpm --filter dashboard build",
+    "clean": "pnpm -r clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "@kv/dashboard",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "echo 'Dashboard dev server'",
+    "build": "echo 'Dashboard build'",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

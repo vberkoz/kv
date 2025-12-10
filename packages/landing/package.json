@@ -1,0 +1,12 @@
+{
+  "name": "@kv/landing",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "echo 'Landing dev server'",
+    "build": "echo 'Landing build'",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
