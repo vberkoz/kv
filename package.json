@@ -2,11 +2,12 @@
   "name": "kv-storage",
   "version": "1.0.0",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": ["packages/shared", "packages/infrastructure", "packages/landing", "packages/dashboard", "packages/sdk-js"],
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm -r dev",
     "build:frontend": "pnpm --filter landing build && pnpm --filter dashboard build",
+    "build:sdk": "pnpm --filter @kv-storage/client build",
     "deploy:infra": "pnpm --filter infrastructure deploy",
     "deploy:frontend": "pnpm --filter landing build && pnpm --filter dashboard build",
     "deploy:all": "pnpm build:frontend && pnpm --filter infrastructure deploy",

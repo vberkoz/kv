@@ -1,0 +1,21 @@
+{
+  "name": "@kv-storage/client",
+  "version": "1.0.0",
+  "description": "Official JavaScript/TypeScript client for KV Storage API",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "keywords": ["kv", "storage", "database", "serverless", "key-value"],
+  "author": "KV Storage",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vberkoz/kv-storage"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
