@@ -19,6 +19,7 @@ export class LambdaStack extends Stack {
   public readonly login: NodejsFunction;
   public readonly generateApiKey: NodejsFunction;
   public readonly getUsage: NodejsFunction;
+  public readonly paddleWebhook: NodejsFunction;
 
   constructor(scope: Construct, id: string, props: LambdaStackProps) {
     super(scope, id, props);
@@ -27,7 +28,8 @@ export class LambdaStack extends Stack {
       TABLE_NAME: props.table.tableName,
       GSI_NAME: 'GSI1',
       NODE_ENV: 'production',
-      JWT_SECRET: process.env.JWT_SECRET || 'dev-secret-change-in-production'
+      JWT_SECRET: process.env.JWT_SECRET || 'dev-secret-change-in-production',
+      PADDLE_WEBHOOK_SECRET: process.env.PADDLE_WEBHOOK_SECRET || ''
     };
 
     const bundling = { externalModules: ['@aws-sdk/*'] };
@@ -132,5 +134,16 @@ export class LambdaStack extends Stack {
     props.table.grantReadData(this.login);
     props.table.grantReadWriteData(this.generateApiKey);
     props.table.grantReadData(this.getUsage);
+
+    this.paddleWebhook = new NodejsFunction(this, 'PaddleWebhookFunction', {
+      entry: 'src/lambdas/paddle-webhook.ts',
+      handler: 'handler',
+      runtime: Runtime.NODEJS_18_X,
+      timeout: Duration.seconds(10),
+      environment,
+      bundling
+    });
+
+    props.table.grantReadWriteData(this.paddleWebhook);
   }
 }

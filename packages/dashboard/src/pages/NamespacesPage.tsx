@@ -51,6 +51,7 @@ export default function NamespacesPage() {
             <Link to="/dashboard" className="text-xl font-bold">KV Storage</Link>
             <Link to="/namespaces" className="text-gray-600 hover:text-gray-900">Namespaces</Link>
             <Link to="/explorer" className="text-gray-600 hover:text-gray-900">API Explorer</Link>
+            <Link to="/pricing" className="text-gray-600 hover:text-gray-900">Pricing</Link>
           </div>
           <button
             onClick={logout}

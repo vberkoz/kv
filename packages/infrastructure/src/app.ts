@@ -32,6 +32,7 @@ const apiStack = new ApiStack(app, 'KVApiStack', {
   login: lambdaStack.login,
   generateApiKey: lambdaStack.generateApiKey,
   getUsage: lambdaStack.getUsage,
+  paddleWebhook: lambdaStack.paddleWebhook,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION || 'us-east-1'

@@ -6,6 +6,7 @@ import SignupPage from './pages/SignupPage';
 import DashboardPage from './pages/DashboardPage';
 import NamespacesPage from './pages/NamespacesPage';
 import ApiExplorerPage from './pages/ApiExplorerPage';
+import PricingPage from './pages/PricingPage';
 
 function App() {
   return (
@@ -36,6 +37,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ApiExplorerPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pricing"
+            element={
+              <ProtectedRoute>
+                <PricingPage />
               </ProtectedRoute>
             }
           />

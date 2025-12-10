@@ -14,6 +14,7 @@ interface ApiStackProps extends StackProps {
   login: NodejsFunction;
   generateApiKey: NodejsFunction;
   getUsage: NodejsFunction;
+  paddleWebhook: NodejsFunction;
 }
 
 export class ApiStack extends Stack {
@@ -43,6 +44,10 @@ export class ApiStack extends Stack {
     
     const usage = v1.addResource('usage');
     usage.addMethod('GET', new LambdaIntegration(props.getUsage));
+    
+    const webhooks = v1.addResource('webhooks');
+    const paddle = webhooks.addResource('paddle');
+    paddle.addMethod('POST', new LambdaIntegration(props.paddleWebhook));
     
     const namespaces = v1.addResource('namespaces');
     namespaces.addMethod('POST', new LambdaIntegration(props.createNamespace));
