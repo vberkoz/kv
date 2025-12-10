@@ -10,6 +10,9 @@ interface ApiStackProps extends StackProps {
   createNamespace: NodejsFunction;
   listNamespaces: NodejsFunction;
   listKeys: NodejsFunction;
+  signup: NodejsFunction;
+  login: NodejsFunction;
+  generateApiKey: NodejsFunction;
 }
 
 export class ApiStack extends Stack {
@@ -29,6 +32,13 @@ export class ApiStack extends Stack {
     });
 
     const v1 = this.api.root.addResource('v1');
+    
+    const auth = v1.addResource('auth');
+    auth.addResource('signup').addMethod('POST', new LambdaIntegration(props.signup));
+    auth.addResource('login').addMethod('POST', new LambdaIntegration(props.login));
+    
+    const apiKeys = v1.addResource('api-keys');
+    apiKeys.addMethod('POST', new LambdaIntegration(props.generateApiKey));
     
     const namespaces = v1.addResource('namespaces');
     namespaces.addMethod('POST', new LambdaIntegration(props.createNamespace));

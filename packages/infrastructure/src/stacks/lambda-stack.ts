@@ -15,6 +15,9 @@ export class LambdaStack extends Stack {
   public readonly createNamespace: NodejsFunction;
   public readonly listNamespaces: NodejsFunction;
   public readonly listKeys: NodejsFunction;
+  public readonly signup: NodejsFunction;
+  public readonly login: NodejsFunction;
+  public readonly generateApiKey: NodejsFunction;
 
   constructor(scope: Construct, id: string, props: LambdaStackProps) {
     super(scope, id, props);
@@ -22,7 +25,8 @@ export class LambdaStack extends Stack {
     const environment = {
       TABLE_NAME: props.table.tableName,
       GSI_NAME: 'GSI1',
-      NODE_ENV: 'production'
+      NODE_ENV: 'production',
+      JWT_SECRET: process.env.JWT_SECRET || 'dev-secret-change-in-production'
     };
 
     const bundling = { externalModules: ['@aws-sdk/*'] };
@@ -81,11 +85,41 @@ export class LambdaStack extends Stack {
       bundling
     });
 
+    this.signup = new NodejsFunction(this, 'SignupFunction', {
+      entry: 'src/lambdas/signup.ts',
+      handler: 'handler',
+      runtime: Runtime.NODEJS_18_X,
+      timeout: Duration.seconds(10),
+      environment,
+      bundling
+    });
+
+    this.login = new NodejsFunction(this, 'LoginFunction', {
+      entry: 'src/lambdas/login.ts',
+      handler: 'handler',
+      runtime: Runtime.NODEJS_18_X,
+      timeout: Duration.seconds(10),
+      environment,
+      bundling
+    });
+
+    this.generateApiKey = new NodejsFunction(this, 'GenerateApiKeyFunction', {
+      entry: 'src/lambdas/generate-api-key.ts',
+      handler: 'handler',
+      runtime: Runtime.NODEJS_18_X,
+      timeout: Duration.seconds(10),
+      environment,
+      bundling
+    });
+
     props.table.grantReadWriteData(this.getValue);
     props.table.grantReadWriteData(this.putValue);
     props.table.grantReadWriteData(this.deleteValue);
     props.table.grantReadWriteData(this.createNamespace);
     props.table.grantReadData(this.listNamespaces);
     props.table.grantReadData(this.listKeys);
+    props.table.grantReadWriteData(this.signup);
+    props.table.grantReadData(this.login);
+    props.table.grantReadWriteData(this.generateApiKey);
   }
 }

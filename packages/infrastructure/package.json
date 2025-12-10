@@ -13,12 +13,18 @@
     "@aws-sdk/client-dynamodb": "^3.400.0",
     "@aws-sdk/lib-dynamodb": "^3.400.0",
     "@aws-sdk/util-dynamodb": "^3.400.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "uuid": "^9.0.0",
     "@kv/shared": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.0.0",
     "@types/node": "^20.0.0",
     "aws-cdk": "^2.100.0",
-    "esbuild": "^0.19.0"
+    "esbuild": "^0.19.0",
+    "@types/bcryptjs": "^2.4.2",
+    "@types/jsonwebtoken": "^9.0.2",
+    "@types/uuid": "^9.0.2"
   }
 }
