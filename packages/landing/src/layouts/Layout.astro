@@ -1,10 +1,10 @@
 ---
 interface Props {
   title: string;
-  description: string;
+  description?: string;
 }
 
-const { title, description } = Astro.props;
+const { title, description = 'Simple REST API for storing and retrieving JSON data without managing infrastructure' } = Astro.props;
 ---
 
 <!DOCTYPE html>
@@ -13,8 +13,14 @@ const { title, description } = Astro.props;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
+    <meta name="keywords" content="key-value storage, serverless database, REST API, JSON storage, cloud database" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <link rel="canonical" href={Astro.url.href} />
     <title>{title}</title>
   </head>
   <body class="bg-gray-50">

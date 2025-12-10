@@ -1,0 +1,62 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Documentation - KV Storage">
+  <div class="max-w-4xl mx-auto px-4 py-16">
+    <h1 class="text-4xl font-bold mb-8">Documentation</h1>
+    
+    <div class="prose prose-lg max-w-none">
+      <p class="text-xl text-gray-600 mb-8">
+        Simple, serverless key-value storage API. Store and retrieve JSON data without managing infrastructure.
+      </p>
+
+      <div class="grid md:grid-cols-2 gap-6 mb-12">
+        <a href="/docs/quickstart" class="block p-6 bg-white rounded-lg shadow hover:shadow-lg transition">
+          <h3 class="text-xl font-bold mb-2">🚀 Quick Start</h3>
+          <p class="text-gray-600">Get started in 5 minutes with our step-by-step guide.</p>
+        </a>
+        
+        <a href="/docs/api-reference" class="block p-6 bg-white rounded-lg shadow hover:shadow-lg transition">
+          <h3 class="text-xl font-bold mb-2">📚 API Reference</h3>
+          <p class="text-gray-600">Complete documentation of all endpoints and parameters.</p>
+        </a>
+        
+        <a href="/docs/examples" class="block p-6 bg-white rounded-lg shadow hover:shadow-lg transition">
+          <h3 class="text-xl font-bold mb-2">💡 Examples</h3>
+          <p class="text-gray-600">Real-world use cases and code examples.</p>
+        </a>
+        
+        <a href="https://github.com/vberkoz/kv-examples" class="block p-6 bg-white rounded-lg shadow hover:shadow-lg transition">
+          <h3 class="text-xl font-bold mb-2">🔗 GitHub Examples</h3>
+          <p class="text-gray-600">Sample projects and templates on GitHub.</p>
+        </a>
+      </div>
+
+      <h2 class="text-2xl font-bold mb-4">What is KV Storage?</h2>
+      <p class="mb-4">
+        KV Storage is a serverless key-value database with a simple REST API. Store any JSON data 
+        and retrieve it instantly from anywhere in the world.
+      </p>
+
+      <h3 class="text-xl font-bold mb-3">Key Features</h3>
+      <ul class="mb-6">
+        <li>✅ Simple REST API - No SDKs required</li>
+        <li>✅ JSON storage - Store any structured data</li>
+        <li>✅ Namespaces - Organize your data</li>
+        <li>✅ Fast retrieval - Low latency worldwide</li>
+        <li>✅ Secure - API key authentication</li>
+        <li>✅ Scalable - From prototype to production</li>
+      </ul>
+
+      <h3 class="text-xl font-bold mb-3">Use Cases</h3>
+      <ul class="mb-6">
+        <li>🎯 User sessions and preferences</li>
+        <li>🎯 Feature flags and configuration</li>
+        <li>🎯 Cache layer for APIs</li>
+        <li>🎯 Real-time counters and analytics</li>
+        <li>🎯 Temporary data storage</li>
+      </ul>
+    </div>
+  </div>
+</Layout>

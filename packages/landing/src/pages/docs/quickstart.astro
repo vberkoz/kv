@@ -1,0 +1,63 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Quick Start - KV Storage">
+  <div class="max-w-4xl mx-auto px-4 py-16">
+    <nav class="mb-8">
+      <a href="/docs" class="text-blue-600 hover:underline">← Back to Docs</a>
+    </nav>
+
+    <h1 class="text-4xl font-bold mb-4">Quick Start</h1>
+    <p class="text-xl text-gray-600 mb-8">Get started with KV Storage in 5 minutes</p>
+
+    <div class="prose prose-lg max-w-none">
+      <h2 class="text-2xl font-bold mb-4">1. Sign Up</h2>
+      <p class="mb-6">
+        Create a free account at <a href="https://kv.vberkoz.com/signup" class="text-blue-600 underline">kv.vberkoz.com/signup</a>
+      </p>
+
+      <h2 class="text-2xl font-bold mb-4">2. Get Your API Key</h2>
+      <p class="mb-6">
+        After signing up, copy your API key from the dashboard. Keep it secure!
+      </p>
+
+      <h2 class="text-2xl font-bold mb-4">3. Store a Value</h2>
+      <p class="mb-4">Use the PUT endpoint to store data:</p>
+      <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-6"><code>curl -X PUT "https://api.kv.vberkoz.com/v1/myapp/user:123" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{"value": {"name": "John", "email": "john@example.com"}}'</code></pre>
+
+      <h2 class="text-2xl font-bold mb-4">4. Retrieve the Value</h2>
+      <p class="mb-4">Use the GET endpoint to fetch data:</p>
+      <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-6"><code>curl "https://api.kv.vberkoz.com/v1/myapp/user:123" \\
+  -H "Authorization: Bearer YOUR_API_KEY"</code></pre>
+
+      <p class="mb-4">Response:</p>
+      <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-6"><code>{
+  "value": {
+    "name": "John",
+    "email": "john@example.com"
+  }
+}</code></pre>
+
+      <h2 class="text-2xl font-bold mb-4">5. Delete a Value</h2>
+      <p class="mb-4">Use the DELETE endpoint to remove data:</p>
+      <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-6"><code>curl -X DELETE "https://api.kv.vberkoz.com/v1/myapp/user:123" \\
+  -H "Authorization: Bearer YOUR_API_KEY"</code></pre>
+
+      <h2 class="text-2xl font-bold mb-4">Next Steps</h2>
+      <ul class="mb-6">
+        <li><a href="/docs/api-reference" class="text-blue-600 underline">Read the full API reference</a></li>
+        <li><a href="/docs/examples" class="text-blue-600 underline">Explore example use cases</a></li>
+        <li><a href="/pricing" class="text-blue-600 underline">Check out pricing plans</a></li>
+      </ul>
+
+      <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mt-8">
+        <p class="font-semibold">💡 Pro Tip</p>
+        <p>Use namespaces to organize your data. For example: <code>myapp</code>, <code>production</code>, <code>staging</code></p>
+      </div>
+    </div>
+  </div>
+</Layout>

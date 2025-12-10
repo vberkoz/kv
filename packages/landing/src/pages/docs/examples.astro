@@ -1,0 +1,184 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Examples - KV Storage">
+  <div class="max-w-4xl mx-auto px-4 py-16">
+    <nav class="mb-8">
+      <a href="/docs" class="text-blue-600 hover:underline">← Back to Docs</a>
+    </nav>
+
+    <h1 class="text-4xl font-bold mb-4">Examples</h1>
+    <p class="text-xl text-gray-600 mb-8">Real-world use cases and code examples</p>
+
+    <div class="prose prose-lg max-w-none">
+      <h2 class="text-2xl font-bold mb-4">User Session Storage</h2>
+      <p class="mb-4">Store user session data with automatic expiration:</p>
+      <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-8"><code>// Store session
+await fetch('https://api.kv.vberkoz.com/v1/sessions/user:123', {
+  method: 'PUT',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    value: {
+      userId: '123',
+      email: 'user@example.com',
+      loginAt: new Date().toISOString()
+    }
+  })
+});
+
+// Retrieve session
+const res = await fetch('https://api.kv.vberkoz.com/v1/sessions/user:123', {
+  headers: { 'Authorization': 'Bearer YOUR_API_KEY' }
+});
+const session = await res.json();</code></pre>
+
+      <h2 class="text-2xl font-bold mb-4">Feature Flags</h2>
+      <p class="mb-4">Manage feature flags for your application:</p>
+      <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-8"><code>// Store feature flags
+await fetch('https://api.kv.vberkoz.com/v1/config/features', {
+  method: 'PUT',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    value: {
+      darkMode: true,
+      betaFeatures: false,
+      newDashboard: true
+    }
+  })
+});
+
+// Check feature flag
+const res = await fetch('https://api.kv.vberkoz.com/v1/config/features', {
+  headers: { 'Authorization': 'Bearer YOUR_API_KEY' }
+});
+const { value } = await res.json();
+if (value.darkMode) {
+  // Enable dark mode
+}</code></pre>
+
+      <h2 class="text-2xl font-bold mb-4">API Cache Layer</h2>
+      <p class="mb-4">Cache expensive API responses:</p>
+      <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-8"><code>async function getCachedData(key) {
+  // Try cache first
+  const cached = await fetch(`https://api.kv.vberkoz.com/v1/cache/${key}`, {
+    headers: { 'Authorization': 'Bearer YOUR_API_KEY' }
+  });
+  
+  if (cached.ok) {
+    return (await cached.json()).value;
+  }
+  
+  // Fetch from source
+  const data = await fetchFromExpensiveAPI();
+  
+  // Store in cache
+  await fetch(`https://api.kv.vberkoz.com/v1/cache/${key}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': 'Bearer YOUR_API_KEY',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ value: data })
+  });
+  
+  return data;
+}</code></pre>
+
+      <h2 class="text-2xl font-bold mb-4">Real-time Counters</h2>
+      <p class="mb-4">Track page views, likes, or any counter:</p>
+      <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-8"><code>// Increment counter
+async function incrementViews(postId) {
+  const key = `stats:views:${postId}`;
+  
+  // Get current count
+  const res = await fetch(`https://api.kv.vberkoz.com/v1/analytics/${key}`, {
+    headers: { 'Authorization': 'Bearer YOUR_API_KEY' }
+  });
+  
+  const current = res.ok ? (await res.json()).value : 0;
+  
+  // Update count
+  await fetch(`https://api.kv.vberkoz.com/v1/analytics/${key}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': 'Bearer YOUR_API_KEY',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ value: current + 1 })
+  });
+}</code></pre>
+
+      <h2 class="text-2xl font-bold mb-4">User Preferences</h2>
+      <p class="mb-4">Store user settings and preferences:</p>
+      <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-8"><code>// Save preferences
+await fetch('https://api.kv.vberkoz.com/v1/users/prefs:user123', {
+  method: 'PUT',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    value: {
+      theme: 'dark',
+      language: 'en',
+      notifications: true,
+      timezone: 'America/New_York'
+    }
+  })
+});</code></pre>
+
+      <h2 class="text-2xl font-bold mb-4">Todo App Backend</h2>
+      <p class="mb-4">Build a simple todo app with KV Storage:</p>
+      <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-8"><code>// Add todo
+const todoId = Date.now();
+await fetch(`https://api.kv.vberkoz.com/v1/todos/todo:${todoId}`, {
+  method: 'PUT',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    value: {
+      id: todoId,
+      text: 'Buy groceries',
+      completed: false,
+      createdAt: new Date().toISOString()
+    }
+  })
+});
+
+// List all todos (use prefix query)
+const res = await fetch('https://api.kv.vberkoz.com/v1/todos?prefix=todo:', {
+  headers: { 'Authorization': 'Bearer YOUR_API_KEY' }
+});
+const { keys } = await res.json();
+
+// Fetch each todo
+const todos = await Promise.all(
+  keys.map(key => 
+    fetch(`https://api.kv.vberkoz.com/v1/todos/${key}`, {
+      headers: { 'Authorization': 'Bearer YOUR_API_KEY' }
+    }).then(r => r.json())
+  )
+);</code></pre>
+
+      <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mt-8">
+        <p class="font-semibold">💡 More Examples</p>
+        <p>Check out our <a href="https://github.com/vberkoz/kv-examples" class="text-blue-600 underline">GitHub repository</a> for complete example projects including:</p>
+        <ul class="mt-2">
+          <li>• Todo app with React</li>
+          <li>• Blog with Next.js</li>
+          <li>• E-commerce cart</li>
+          <li>• Real-time chat</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</Layout>
