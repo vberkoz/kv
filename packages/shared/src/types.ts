@@ -20,3 +20,21 @@ export interface KeyValue {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface APIGatewayEvent {
+  pathParameters: { namespace: string; key: string } | null;
+  headers: { authorization?: string; [key: string]: string | undefined };
+  body: string | null;
+}
+
+export interface APIResponse {
+  statusCode: number;
+  headers: Record<string, string>;
+  body: string;
+}
+
+export interface AuthenticatedUser {
+  userId: string;
+  plan: 'free' | 'pro' | 'scale';
+  apiKey: string;
+}

@@ -10,11 +10,15 @@
   "dependencies": {
     "aws-cdk-lib": "^2.100.0",
     "constructs": "^10.0.0",
+    "@aws-sdk/client-dynamodb": "^3.400.0",
+    "@aws-sdk/lib-dynamodb": "^3.400.0",
+    "@aws-sdk/util-dynamodb": "^3.400.0",
     "@kv/shared": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.0.0",
     "@types/node": "^20.0.0",
-    "aws-cdk": "^2.100.0"
+    "aws-cdk": "^2.100.0",
+    "esbuild": "^0.19.0"
   }
 }
