@@ -12,6 +12,9 @@ export class LambdaStack extends Stack {
   public readonly getValue: NodejsFunction;
   public readonly putValue: NodejsFunction;
   public readonly deleteValue: NodejsFunction;
+  public readonly createNamespace: NodejsFunction;
+  public readonly listNamespaces: NodejsFunction;
+  public readonly listKeys: NodejsFunction;
 
   constructor(scope: Construct, id: string, props: LambdaStackProps) {
     super(scope, id, props);
@@ -22,15 +25,15 @@ export class LambdaStack extends Stack {
       NODE_ENV: 'production'
     };
 
+    const bundling = { externalModules: ['@aws-sdk/*'] };
+
     this.getValue = new NodejsFunction(this, 'GetValueFunction', {
       entry: 'src/lambdas/get-value.ts',
       handler: 'handler',
       runtime: Runtime.NODEJS_18_X,
       timeout: Duration.seconds(10),
       environment,
-      bundling: {
-        externalModules: ['@aws-sdk/*']
-      }
+      bundling
     });
 
     this.putValue = new NodejsFunction(this, 'PutValueFunction', {
@@ -39,9 +42,7 @@ export class LambdaStack extends Stack {
       runtime: Runtime.NODEJS_18_X,
       timeout: Duration.seconds(10),
       environment,
-      bundling: {
-        externalModules: ['@aws-sdk/*']
-      }
+      bundling
     });
 
     this.deleteValue = new NodejsFunction(this, 'DeleteValueFunction', {
@@ -50,13 +51,41 @@ export class LambdaStack extends Stack {
       runtime: Runtime.NODEJS_18_X,
       timeout: Duration.seconds(10),
       environment,
-      bundling: {
-        externalModules: ['@aws-sdk/*']
-      }
+      bundling
+    });
+
+    this.createNamespace = new NodejsFunction(this, 'CreateNamespaceFunction', {
+      entry: 'src/lambdas/create-namespace.ts',
+      handler: 'handler',
+      runtime: Runtime.NODEJS_18_X,
+      timeout: Duration.seconds(10),
+      environment,
+      bundling
+    });
+
+    this.listNamespaces = new NodejsFunction(this, 'ListNamespacesFunction', {
+      entry: 'src/lambdas/list-namespaces.ts',
+      handler: 'handler',
+      runtime: Runtime.NODEJS_18_X,
+      timeout: Duration.seconds(10),
+      environment,
+      bundling
+    });
+
+    this.listKeys = new NodejsFunction(this, 'ListKeysFunction', {
+      entry: 'src/lambdas/list-keys.ts',
+      handler: 'handler',
+      runtime: Runtime.NODEJS_18_X,
+      timeout: Duration.seconds(10),
+      environment,
+      bundling
     });
 
     props.table.grantReadWriteData(this.getValue);
     props.table.grantReadWriteData(this.putValue);
     props.table.grantReadWriteData(this.deleteValue);
+    props.table.grantReadWriteData(this.createNamespace);
+    props.table.grantReadData(this.listNamespaces);
+    props.table.grantReadData(this.listKeys);
   }
 }

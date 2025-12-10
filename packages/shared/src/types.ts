@@ -25,6 +25,7 @@ export interface APIGatewayEvent {
   pathParameters: { namespace: string; key: string } | null;
   headers: { authorization?: string; [key: string]: string | undefined };
   body: string | null;
+  queryStringParameters?: { prefix?: string; [key: string]: string | undefined } | null;
 }
 
 export interface APIResponse {
