@@ -40,7 +40,7 @@ export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
         email,
         passwordHash,
         plan: 'trial',
-        trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+        trialEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         requestCount: 0,
         storageBytes: 0,
         createdAt: now,

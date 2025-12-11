@@ -3,7 +3,7 @@ import { docClient, TABLE_NAME } from './dynamodb';
 import { sendUsageAlert } from '../send-usage-alert';
 
 const PLAN_LIMITS = {
-  trial: { requests: 100000, storage: 10 * 1024 * 1024 * 1024 },
+  trial: { requests: 10000, storage: 10 * 1024 * 1024 * 1024 },
   starter: { requests: 500000, storage: 25 * 1024 * 1024 * 1024 },
   pro: { requests: 1000000, storage: 100 * 1024 * 1024 * 1024 },
   scale: { requests: 5000000, storage: 250 * 1024 * 1024 * 1024 },
@@ -36,7 +36,16 @@ export async function incrementRequestCount(userId: string, email: string, plan:
   }
 }
 
-export async function checkRateLimit(userId: string, plan: string): Promise<boolean> {
+export async function checkRateLimit(userId: string, plan: string, trialEndsAt?: string): Promise<boolean> {
+  // Check trial expiry first
+  if (plan === 'trial' && trialEndsAt) {
+    const now = new Date();
+    const expiryDate = new Date(trialEndsAt);
+    if (now > expiryDate) {
+      return false; // Trial expired
+    }
+  }
+
   const month = new Date().toISOString().slice(0, 7);
   
   const result = await docClient.send(new GetCommand({

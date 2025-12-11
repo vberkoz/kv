@@ -23,7 +23,7 @@ export async function validateApiKey(apiKey: string): Promise<AuthenticatedUser>
 
   const user = result.Items[0];
   
-  const allowed = await checkRateLimit(user.userId, user.plan);
+  const allowed = await checkRateLimit(user.userId, user.plan, user.trialEndsAt);
   if (!allowed) {
     throw new Error('RateLimitExceeded');
   }

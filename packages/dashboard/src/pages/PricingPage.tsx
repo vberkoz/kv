@@ -50,10 +50,10 @@ export default function PricingPage() {
   const plans = [
     {
       name: 'Trial',
-      price: 'Free for 14 days',
+      price: 'Free',
       storage: '10GB',
-      requests: '100K',
-      features: ['All features', 'No credit card required', 'Cancel anytime'],
+      requests: '10K or 30 days',
+      features: ['All features', 'No credit card required', 'Whichever comes first'],
       current: user?.plan === 'trial',
       isTrial: true
     },
