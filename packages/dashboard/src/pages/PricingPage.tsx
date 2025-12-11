@@ -49,47 +49,48 @@ export default function PricingPage() {
 
   const plans = [
     {
-      name: 'Free',
-      price: '$0',
+      name: 'Trial',
+      price: 'Free for 14 days',
       storage: '10GB',
       requests: '100K',
-      features: ['Community support', 'Basic analytics'],
-      current: user?.plan === 'free'
+      features: ['All features', 'No credit card required', 'Cancel anytime'],
+      current: user?.plan === 'trial',
+      isTrial: true
     },
     {
       name: 'Starter',
-      price: '$5',
+      price: '$7',
       storage: '25GB',
       requests: '500K',
-      features: ['Email support', 'Advanced analytics'],
+      features: ['Email support', 'Advanced analytics', 'Cancel anytime'],
       priceId: process.env.VITE_PADDLE_STARTER_PRICE_ID,
       current: user?.plan === 'starter'
     },
     {
       name: 'Pro',
-      price: '$15',
+      price: '$19',
       storage: '100GB',
       requests: '1M',
-      features: ['Priority support', 'Custom domains'],
+      features: ['Priority support', 'Custom domains', 'Advanced features'],
       priceId: process.env.VITE_PADDLE_PRO_PRICE_ID,
       current: user?.plan === 'pro',
       popular: true
     },
     {
       name: 'Scale',
-      price: '$49',
+      price: '$59',
       storage: '250GB',
       requests: '5M',
-      features: ['SLA 99.9%', 'Dedicated support'],
+      features: ['SLA 99.9%', 'Dedicated support', 'Custom integrations'],
       priceId: process.env.VITE_PADDLE_SCALE_PRICE_ID,
       current: user?.plan === 'scale'
     },
     {
       name: 'Business',
-      price: '$149',
+      price: '$179',
       storage: '1TB',
       requests: '20M',
-      features: ['SLA 99.95%', 'Custom integrations', 'White-label'],
+      features: ['SLA 99.95%', 'White-label', 'Custom SLA', 'Priority support'],
       priceId: process.env.VITE_PADDLE_BUSINESS_PRICE_ID,
       current: user?.plan === 'business'
     }
@@ -128,7 +129,15 @@ export default function PricingPage() {
                   <li key={feature} className="text-gray-600">✓ {feature}</li>
                 ))}
               </ul>
-              {plan.priceId && !plan.current && (
+              {plan.isTrial && !plan.current && (
+                <button
+                  onClick={() => navigate('/signup')}
+                  className="w-full bg-green-600 text-white p-3 rounded hover:bg-green-700"
+                >
+                  Start Free Trial
+                </button>
+              )}
+              {plan.priceId && !plan.current && !plan.isTrial && (
                 <button
                   onClick={() => openCheckout(plan.priceId!)}
                   disabled={loading}

@@ -3,7 +3,7 @@ import { docClient, TABLE_NAME } from './dynamodb';
 import { sendUsageAlert } from '../send-usage-alert';
 
 const PLAN_LIMITS = {
-  free: { requests: 100000, storage: 10 * 1024 * 1024 * 1024 },
+  trial: { requests: 100000, storage: 10 * 1024 * 1024 * 1024 },
   starter: { requests: 500000, storage: 25 * 1024 * 1024 * 1024 },
   pro: { requests: 1000000, storage: 100 * 1024 * 1024 * 1024 },
   scale: { requests: 5000000, storage: 250 * 1024 * 1024 * 1024 },
@@ -28,7 +28,7 @@ export async function incrementRequestCount(userId: string, email: string, plan:
   }));
 
   const requestCount = result.Attributes?.requestCount || 0;
-  const limit = PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS]?.requests || PLAN_LIMITS.free.requests;
+  const limit = PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS]?.requests || PLAN_LIMITS.trial.requests;
   const percent = (requestCount / limit) * 100;
   
   if (percent >= 80 && percent < 81 && email) {
@@ -48,7 +48,7 @@ export async function checkRateLimit(userId: string, plan: string): Promise<bool
   }));
 
   const requestCount = result.Item?.requestCount || 0;
-  const limit = PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS]?.requests || PLAN_LIMITS.free.requests;
+  const limit = PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS]?.requests || PLAN_LIMITS.trial.requests;
   
   return requestCount < limit;
 }

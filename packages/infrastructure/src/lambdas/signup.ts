@@ -39,7 +39,8 @@ export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
         userId,
         email,
         passwordHash,
-        plan: 'free',
+        plan: 'trial',
+        trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
         requestCount: 0,
         storageBytes: 0,
         createdAt: now,
@@ -57,12 +58,12 @@ export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
         GSI1SK: 'METADATA',
         entityType: 'APIKEY',
         userId,
-        plan: 'free',
+        plan: 'trial',
         createdAt: now
       }
     }));
 
-    const token = jwt.sign({ userId, email, plan: 'free' }, JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ userId, email, plan: 'trial' }, JWT_SECRET, { expiresIn: '24h' });
 
     return successResponse({ token, apiKey, userId }, 201);
   } catch (error: any) {
