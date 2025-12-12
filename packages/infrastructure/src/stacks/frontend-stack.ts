@@ -1,8 +1,8 @@
 import { Stack, StackProps, RemovalPolicy, CfnOutput, Duration } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { Bucket, BlockPublicAccess } from 'aws-cdk-lib/aws-s3';
-import { Distribution, ViewerProtocolPolicy, OriginAccessIdentity, Function as CfFunction, FunctionCode, FunctionEventType } from 'aws-cdk-lib/aws-cloudfront';
-import { S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
+import { Distribution, ViewerProtocolPolicy, OriginAccessIdentity, Function as CfFunction, FunctionCode, FunctionEventType, AllowedMethods, CachePolicy, OriginRequestPolicy, OriginProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
+import { S3BucketOrigin, HttpOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { Certificate, CertificateValidation } from 'aws-cdk-lib/aws-certificatemanager';
 import { HostedZone, ARecord, RecordTarget } from 'aws-cdk-lib/aws-route53';
@@ -98,6 +98,7 @@ export class DashboardStack extends Stack {
 
     const baseDomain = process.env.DOMAIN_NAME || 'vberkoz.com';
     const dashboardDomain = `dashboard.kv.${baseDomain}`;
+    const apiDomain = 'd-cw2uu11x0g.execute-api.us-east-1.amazonaws.com';
     const hostedZone = HostedZone.fromLookup(this, 'HostedZone', {
       domainName: 'vberkoz.com'
     });
@@ -122,14 +123,26 @@ export class DashboardStack extends Stack {
           var request = event.request;
           var uri = request.uri;
 
-          if (uri.endsWith("/")) {
-            request.uri += "index.html";
-          } else if (!uri.includes(".")) {
-            request.uri += "/index.html";
+          if (uri === '/' || uri === '') {
+            request.uri = '/index.html';
+          } else if (!uri.includes('.') && !uri.startsWith('/api')) {
+            request.uri = '/index.html';
           }
 
           return request;
         }
+      `)
+    });
+
+    const apiStripFunction = new CfFunction(this, 'ApiStripPrefixFunction', {
+      code: FunctionCode.fromInline(`
+function handler(event) {
+  var request = event.request;
+  if (request.uri.indexOf('/api') === 0) {
+    request.uri = '/prod' + request.uri.substring(4);
+  }
+  return request;
+}
       `)
     });
 
@@ -144,11 +157,22 @@ export class DashboardStack extends Stack {
           eventType: FunctionEventType.VIEWER_REQUEST
         }]
       },
-      defaultRootObject: 'index.html',
-      errorResponses: [
-        { httpStatus: 404, responseHttpStatus: 200, responsePagePath: '/index.html', ttl: Duration.minutes(5) },
-        { httpStatus: 403, responseHttpStatus: 200, responsePagePath: '/index.html', ttl: Duration.minutes(5) }
-      ]
+      additionalBehaviors: {
+        '/api/*': {
+          origin: new HttpOrigin(apiDomain, {
+            protocolPolicy: OriginProtocolPolicy.HTTPS_ONLY
+          }),
+          viewerProtocolPolicy: ViewerProtocolPolicy.HTTPS_ONLY,
+          allowedMethods: AllowedMethods.ALLOW_ALL,
+          cachePolicy: CachePolicy.CACHING_DISABLED,
+          originRequestPolicy: OriginRequestPolicy.ALL_VIEWER,
+          functionAssociations: [{
+            function: apiStripFunction,
+            eventType: FunctionEventType.VIEWER_REQUEST
+          }]
+        }
+      },
+      defaultRootObject: 'index.html'
     });
 
     new ARecord(this, 'DashboardAliasRecord', {

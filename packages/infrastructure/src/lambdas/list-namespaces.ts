@@ -1,15 +1,15 @@
 import { APIGatewayEvent, APIResponse } from '@kv/shared';
 import { QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient, TABLE_NAME, GSI_NAME } from './shared/dynamodb';
-import { validateApiKey } from './shared/auth';
+import { validateToken } from './shared/auth';
 import { successResponse, errorResponse } from './shared/response';
 
 export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
   try {
-    const apiKey = event.headers.authorization?.replace('Bearer ', '');
-    if (!apiKey) return errorResponse('Missing API key', 401);
+    const token = event.headers.authorization?.replace('Bearer ', '');
+    if (!token) return errorResponse('Missing token', 401);
 
-    const user = await validateApiKey(apiKey);
+    const user = await validateToken(token);
 
     const result = await docClient.send(new QueryCommand({
       TableName: TABLE_NAME,
@@ -29,7 +29,7 @@ export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
     return successResponse({ namespaces });
   } catch (error: any) {
     if (error.message === 'Unauthorized') {
-      return errorResponse('Invalid API key', 401);
+      return errorResponse('Unauthorized', 401);
     }
     return errorResponse('Internal server error', 500);
   }

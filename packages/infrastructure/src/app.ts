@@ -1,3 +1,6 @@
+import { config } from 'dotenv';
+import { resolve } from 'path';
+config({ path: resolve(__dirname, '../../../.env') });
 import { App } from 'aws-cdk-lib';
 import { DatabaseStack } from './stacks/database-stack';
 import { LambdaStack } from './stacks/lambda-stack';
@@ -27,6 +30,8 @@ const databaseStack = new DatabaseStack(app, 'KVDatabaseStack', {
 
 const lambdaStack = new LambdaStack(app, 'KVLambdaStack', {
   table: databaseStack.table,
+  userPoolId: authStack.userPool.userPoolId,
+  userPoolClientId: authStack.userPoolClient.userPoolClientId,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION || 'us-east-1'

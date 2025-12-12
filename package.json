@@ -12,10 +12,10 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "dev": "npm run dev --workspaces --if-present",
-    "build:frontend": "npm run build -w landing && npm run build -w dashboard",
+    "build:frontend": "npm run build -w @kv/landing && npm run build -w @kv/dashboard",
     "build:sdk": "npm run build -w @kv-storage/client",
     "deploy:infra": "npm run deploy -w @kv/infrastructure",
-    "deploy:frontend": "npm run build -w landing && npm run build -w dashboard",
+    "deploy:frontend": "npm run build -w @kv/landing && npm run build -w @kv/dashboard",
     "deploy:all": "npm run build:frontend && npm run deploy -w infrastructure",
     "loadtest": "artillery run artillery.yml",
     "clean": "npm run clean --workspaces --if-present && rm -rf node_modules"

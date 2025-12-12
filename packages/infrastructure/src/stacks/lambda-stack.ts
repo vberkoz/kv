@@ -9,6 +9,8 @@ import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 
 interface LambdaStackProps extends StackProps {
   table: Table;
+  userPoolId: string;
+  userPoolClientId: string;
 }
 
 export class LambdaStack extends Stack {
@@ -33,7 +35,9 @@ export class LambdaStack extends Stack {
       GSI_NAME: 'GSI1',
       NODE_ENV: 'production',
       JWT_SECRET: process.env.JWT_SECRET || 'dev-secret-change-in-production',
-      PADDLE_WEBHOOK_SECRET: process.env.PADDLE_WEBHOOK_SECRET || ''
+      PADDLE_WEBHOOK_SECRET: process.env.PADDLE_WEBHOOK_SECRET || '',
+      USER_POOL_ID: props.userPoolId,
+      USER_POOL_CLIENT_ID: props.userPoolClientId
     };
 
     const bundling = { externalModules: ['@aws-sdk/*'] };
@@ -132,7 +136,7 @@ export class LambdaStack extends Stack {
     props.table.grantReadWriteData(this.putValue);
     props.table.grantReadWriteData(this.deleteValue);
     props.table.grantReadWriteData(this.createNamespace);
-    props.table.grantReadData(this.listNamespaces);
+    props.table.grantReadWriteData(this.listNamespaces);
     props.table.grantReadData(this.listKeys);
     props.table.grantReadWriteData(this.signup);
     props.table.grantReadData(this.login);

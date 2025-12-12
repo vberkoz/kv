@@ -39,21 +39,18 @@ Monorepo with 6 packages:
 ### Prerequisites
 
 - Node.js 18+
-- pnpm
+- npm (comes with Node.js)
 - AWS CLI configured
 - AWS CDK CLI
 
 ### Installation
 
 ```bash
-# Install pnpm if not already installed
-npm install -g pnpm
-
 # Install dependencies
-pnpm install
+npm install
 
 # Build all packages
-pnpm build
+npm run build
 ```
 
 ### Environment Setup
@@ -87,19 +84,19 @@ ALARM_EMAIL=alerts@your-domain.com
 
 ```bash
 # Run all dev servers (landing + dashboard)
-pnpm dev
+npm run dev
 
 # Build all packages
-pnpm build
+npm run build
 
 # Build frontend only
-pnpm build:frontend
+npm run build:frontend
 
 # Build SDK
-pnpm build:sdk
+npm run build:sdk
 
 # Clean all build artifacts
-pnpm clean
+npm run clean
 ```
 
 ## Deployment
@@ -108,21 +105,21 @@ pnpm clean
 
 ```bash
 # Deploy all AWS resources
-pnpm deploy:infra
+npm run deploy:infra
 ```
 
 ### Deploy Frontend
 
 ```bash
 # Build and deploy landing + dashboard to S3
-pnpm deploy:frontend
+npm run deploy:frontend
 ```
 
 ### Deploy Everything
 
 ```bash
 # Build frontend and deploy all resources
-pnpm deploy:all
+npm run deploy:all
 ```
 
 See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
@@ -191,7 +188,7 @@ kv.delete('myapp', 'user:123')
 
 ```bash
 # Run Artillery load tests
-pnpm loadtest
+npm run loadtest
 ```
 
 ## Pricing Plans

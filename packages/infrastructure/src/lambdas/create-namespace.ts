@@ -1,15 +1,15 @@
 import { APIGatewayEvent, APIResponse } from '@kv/shared';
 import { PutCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient, TABLE_NAME } from './shared/dynamodb';
-import { validateApiKey } from './shared/auth';
+import { validateToken } from './shared/auth';
 import { successResponse, errorResponse } from './shared/response';
 
 export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
   try {
-    const apiKey = event.headers.authorization?.replace('Bearer ', '');
-    if (!apiKey) return errorResponse('Missing API key', 401);
+    const token = event.headers.authorization?.replace('Bearer ', '');
+    if (!token) return errorResponse('Missing token', 401);
 
-    const user = await validateApiKey(apiKey);
+    const user = await validateToken(token);
     const body = JSON.parse(event.body || '{}');
     const { name } = body;
 

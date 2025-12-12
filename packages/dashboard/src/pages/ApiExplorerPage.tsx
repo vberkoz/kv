@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import DashboardLayout from '../components/layout/DashboardLayout';
+import { API_URL } from '../constants/config';
 
 const CODE_EXAMPLES = {
-  curl: (ns: string, key: string, apiKey: string) => `curl -X PUT "https://api.kv.vberkoz.com/v1/${ns}/${key}" \\
+  curl: (ns: string, key: string, apiKey: string, apiUrl: string) => `curl -X PUT "${apiUrl}/v1/${ns}/${key}" \\
   -H "Authorization: Bearer ${apiKey}" \\
   -H "Content-Type: application/json" \\
   -d '{"value": {"name": "John"}}'`,
-  javascript: (ns: string, key: string, apiKey: string) => `const response = await fetch('https://api.kv.vberkoz.com/v1/${ns}/${key}', {
+  javascript: (ns: string, key: string, apiKey: string, apiUrl: string) => `const response = await fetch('${apiUrl}/v1/${ns}/${key}', {
   method: 'PUT',
   headers: {
     'Authorization': 'Bearer ${apiKey}',
@@ -14,10 +15,10 @@ const CODE_EXAMPLES = {
   },
   body: JSON.stringify({ value: { name: 'John' } })
 });`,
-  python: (ns: string, key: string, apiKey: string) => `import requests
+  python: (ns: string, key: string, apiKey: string, apiUrl: string) => `import requests
 
 response = requests.put(
-    'https://api.kv.vberkoz.com/v1/${ns}/${key}',
+    '${apiUrl}/v1/${ns}/${key}',
     headers={'Authorization': 'Bearer ${apiKey}'},
     json={'value': {'name': 'John'}}
 )`
@@ -33,7 +34,7 @@ export default function ApiExplorerPage() {
 
   const testApi = async () => {
     try {
-      const res = await fetch(`/api/v1/${namespace}/${key}`, {
+      const res = await fetch(`${API_URL}/v1/${namespace}/${key}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
@@ -113,7 +114,7 @@ export default function ApiExplorerPage() {
               </button>
             </div>
             <pre className="bg-gray-900 text-white p-4 rounded overflow-x-auto text-sm">
-              <code>{CODE_EXAMPLES[language](namespace, key, apiKey)}</code>
+              <code>{CODE_EXAMPLES[language](namespace, key, apiKey, API_URL)}</code>
             </pre>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../components/layout/DashboardLayout';
+import { API_URL, STORAGE_KEYS } from '../constants/config';
 
 interface Namespace {
   name: string;
@@ -12,9 +13,11 @@ export default function NamespacesPage() {
   const [loading, setLoading] = useState(false);
 
   const fetchNamespaces = async () => {
-    const token = localStorage.getItem('token');
-    const res = await fetch('/api/v1/namespaces', {
-      headers: { 'Authorization': `Bearer ${token}` }
+    const tokensStr = localStorage.getItem(STORAGE_KEYS.COGNITO_TOKENS);
+    if (!tokensStr) return;
+    const tokens = JSON.parse(tokensStr);
+    const res = await fetch(`${API_URL}/v1/namespaces`, {
+      headers: { 'Authorization': `Bearer ${tokens.accessToken}` }
     });
     const data = await res.json();
     setNamespaces(data.namespaces);
@@ -27,11 +30,13 @@ export default function NamespacesPage() {
   const createNamespace = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const token = localStorage.getItem('token');
-    await fetch('/api/v1/namespaces', {
+    const tokensStr = localStorage.getItem(STORAGE_KEYS.COGNITO_TOKENS);
+    if (!tokensStr) return;
+    const tokens = JSON.parse(tokensStr);
+    await fetch(`${API_URL}/v1/namespaces`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${tokens.accessToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ name: newName })
