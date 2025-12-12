@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
+import DashboardLayout from '../components/layout/DashboardLayout';
 
 interface Namespace {
   name: string;
@@ -11,7 +10,6 @@ export default function NamespacesPage() {
   const [namespaces, setNamespaces] = useState<Namespace[]>([]);
   const [newName, setNewName] = useState('');
   const [loading, setLoading] = useState(false);
-  const { logout } = useAuth();
 
   const fetchNamespaces = async () => {
     const token = localStorage.getItem('token');
@@ -44,26 +42,9 @@ export default function NamespacesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex gap-6">
-            <Link to="/dashboard" className="text-xl font-bold">KV Storage</Link>
-            <Link to="/namespaces" className="text-gray-600 hover:text-gray-900">Namespaces</Link>
-            <Link to="/explorer" className="text-gray-600 hover:text-gray-900">API Explorer</Link>
-            <Link to="/pricing" className="text-gray-600 hover:text-gray-900">Pricing</Link>
-          </div>
-          <button
-            onClick={logout}
-            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-          >
-            Logout
-          </button>
-        </div>
-      </nav>
-      <div className="max-w-4xl mx-auto p-6">
+    <DashboardLayout>
         <h1 className="text-3xl font-bold mb-8">Namespaces</h1>
-        <form onSubmit={createNamespace} className="mb-6 flex gap-2">
+        <form onSubmit={createNamespace} className="mb-6 flex flex-col sm:flex-row gap-2">
           <input
             type="text"
             value={newName}
@@ -93,7 +74,6 @@ export default function NamespacesPage() {
             ))
           )}
         </div>
-      </div>
-    </div>
+    </DashboardLayout>
   );
 }

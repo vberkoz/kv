@@ -2,10 +2,21 @@ import { App } from 'aws-cdk-lib';
 import { DatabaseStack } from './stacks/database-stack';
 import { LambdaStack } from './stacks/lambda-stack';
 import { ApiStack } from './stacks/api-stack';
-import { FrontendStack } from './stacks/frontend-stack';
+import { LandingStack, DashboardStack } from './stacks/frontend-stack';
 import { MonitoringStack } from './stacks/monitoring-stack';
+import { AuthStack } from './stacks/auth-stack';
 
 const app = new App();
+
+const domainName = process.env.DOMAIN_NAME || 'kv.vberkoz.com';
+
+const authStack = new AuthStack(app, 'KVAuthStack', {
+  baseDomain: domainName,
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION || 'us-east-1'
+  }
+});
 
 const databaseStack = new DatabaseStack(app, 'KVDatabaseStack', {
   env: {
@@ -43,15 +54,22 @@ const apiStack = new ApiStack(app, 'KVApiStack', {
 lambdaStack.addDependency(databaseStack);
 apiStack.addDependency(lambdaStack);
 
-const frontendStack = new FrontendStack(app, 'KVFrontendStack', {
-  api: apiStack.api,
+const landingStack = new LandingStack(app, 'KVLandingStack', {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION || 'us-east-1'
   }
 });
 
-frontendStack.addDependency(apiStack);
+const dashboardStack = new DashboardStack(app, 'KVDashboardStack', {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION || 'us-east-1'
+  }
+});
+
+landingStack.addDependency(apiStack);
+dashboardStack.addDependency(apiStack);
 
 const monitoringStack = new MonitoringStack(app, 'KVMonitoringStack', {
   api: apiStack.api,

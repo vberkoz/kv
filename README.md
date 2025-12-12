@@ -16,11 +16,12 @@ Serverless key-value storage API powered by AWS DynamoDB. Simple REST API for st
 
 ## Architecture
 
-- **API**: AWS API Gateway + Lambda (Node.js)
+- **API**: AWS API Gateway + Lambda (Node.js) at `api.domain.com`
 - **Database**: DynamoDB with GSI for efficient queries
 - **Auth**: Amazon Cognito with JWT tokens
 - **Payments**: Paddle integration for subscriptions
-- **Frontend**: S3 + CloudFront CDN
+- **Landing**: S3 + CloudFront at `domain.com`
+- **Dashboard**: S3 + CloudFront at `dashboard.domain.com`
 - **Infrastructure**: AWS CDK (TypeScript)
 
 ## Project Structure
@@ -76,6 +77,7 @@ PADDLE_WEBHOOK_SECRET=your-paddle-webhook-secret
 # Paddle Configuration
 VITE_PADDLE_VENDOR_ID=your-paddle-vendor-id
 VITE_API_URL=https://api.your-domain.com
+VITE_DASHBOARD_URL=https://dashboard.your-domain.com
 
 # Monitoring
 ALARM_EMAIL=alerts@your-domain.com

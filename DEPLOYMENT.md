@@ -4,7 +4,7 @@
 
 - AWS Account with appropriate permissions
 - AWS CLI configured
-- Node.js 18+ and pnpm installed
+- Node.js 18+ and npm installed
 - Domain name configured (kv.vberkoz.com)
 - Paddle account for payments
 - SES email verified for notifications
@@ -39,12 +39,12 @@ export ALARM_EMAIL=alerts@kv.vberkoz.com
 
 ### 1. Install Dependencies
 ```bash
-pnpm install
+npm install
 ```
 
 ### 2. Build All Packages
 ```bash
-pnpm build
+npm run build
 ```
 
 ### 3. Bootstrap CDK (First Time Only)
@@ -55,7 +55,7 @@ npx cdk bootstrap --profile basil
 
 ### 4. Deploy Infrastructure
 ```bash
-pnpm deploy:infra
+npm run deploy:infra
 ```
 
 This deploys:
@@ -97,18 +97,18 @@ aws ses verify-email-identity --email-address alerts@kv.vberkoz.com --profile ba
 
 ### Update Infrastructure Only
 ```bash
-pnpm deploy:infra
+npm run deploy:infra
 ```
 
 ### Update Frontend Only
 ```bash
-pnpm build:frontend
+npm run build:frontend
 # Manually upload to S3 or redeploy FrontendStack
 ```
 
 ### Update Everything
 ```bash
-pnpm deploy:all
+npm run deploy:all
 ```
 
 ## Rollback Procedure
@@ -173,7 +173,7 @@ aws logs tail /aws/lambda/KVLambdaStack-GetValueFunction --follow --profile basi
 ### Run Load Test
 ```bash
 export API_KEY=your-test-api-key
-pnpm loadtest
+npm run loadtest
 ```
 
 ### Interpret Results

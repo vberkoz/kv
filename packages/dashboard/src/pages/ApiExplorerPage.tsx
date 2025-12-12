@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
+import DashboardLayout from '../components/layout/DashboardLayout';
 
 const CODE_EXAMPLES = {
   curl: (ns: string, key: string, apiKey: string) => `curl -X PUT "https://api.kv.vberkoz.com/v1/${ns}/${key}" \\
@@ -30,7 +29,6 @@ export default function ApiExplorerPage() {
   const [value, setValue] = useState('{"name": "John"}');
   const [response, setResponse] = useState('');
   const [language, setLanguage] = useState<'curl' | 'javascript' | 'python'>('curl');
-  const { logout } = useAuth();
   const apiKey = localStorage.getItem('apiKey') || '';
 
   const testApi = async () => {
@@ -51,26 +49,9 @@ export default function ApiExplorerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex gap-6">
-            <Link to="/dashboard" className="text-xl font-bold">KV Storage</Link>
-            <Link to="/namespaces" className="text-gray-600 hover:text-gray-900">Namespaces</Link>
-            <Link to="/explorer" className="text-gray-600 hover:text-gray-900">API Explorer</Link>
-            <Link to="/pricing" className="text-gray-600 hover:text-gray-900">Pricing</Link>
-          </div>
-          <button
-            onClick={logout}
-            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-          >
-            Logout
-          </button>
-        </div>
-      </nav>
-      <div className="max-w-6xl mx-auto p-6">
+    <DashboardLayout>
         <h1 className="text-3xl font-bold mb-8">API Explorer</h1>
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-bold mb-4">Test Request</h2>
             <input
@@ -136,7 +117,6 @@ export default function ApiExplorerPage() {
             </pre>
           </div>
         </div>
-      </div>
-    </div>
+    </DashboardLayout>
   );
 }

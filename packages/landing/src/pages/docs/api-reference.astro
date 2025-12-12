@@ -26,52 +26,52 @@ import Layout from '../../layouts/Layout.astro';
       <h2 class="text-3xl font-bold mb-6">Endpoints</h2>
 
       <div class="mb-12">
-        <h3 class="text-2xl font-bold mb-3">PUT /v1/{namespace}/{key}</h3>
+        <h3 class="text-2xl font-bold mb-3">PUT /v1/&#123;namespace&#125;/&#123;key&#125;</h3>
         <p class="mb-4">Store or update a value</p>
         
         <h4 class="font-bold mb-2">Headers</h4>
         <ul class="mb-4">
-          <li><code>Authorization: Bearer {'{apiKey}'}</code></li>
+          <li><code set:html="Authorization: Bearer {apiKey}"></code></li>
           <li><code>Content-Type: application/json</code></li>
         </ul>
 
         <h4 class="font-bold mb-2">Request Body</h4>
-        <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-4"><code>{
+        <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-4"><code set:html={`{
   "value": any
-}</code></pre>
+}`}></code></pre>
 
         <h4 class="font-bold mb-2">Response</h4>
         <p class="mb-2"><strong>201 Created</strong></p>
-        <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-4"><code>{
+        <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-4"><code set:html={`{
   "message": "Value stored successfully"
-}</code></pre>
+}`}></code></pre>
 
         <h4 class="font-bold mb-2">Example</h4>
-        <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto"><code>curl -X PUT "https://api.kv.vberkoz.com/v1/myapp/config" \\
+        <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto"><code set:html={`curl -X PUT "https://api.kv.vberkoz.com/v1/myapp/config" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
-  -d '{"value": {"theme": "dark", "lang": "en"}}'</code></pre>
+  -d '{"value": {"theme": "dark", "lang": "en"}}'`}></code></pre>
       </div>
 
       <div class="mb-12">
-        <h3 class="text-2xl font-bold mb-3">GET /v1/{namespace}/{key}</h3>
+        <h3 class="text-2xl font-bold mb-3">GET /v1/&#123;namespace&#125;/&#123;key&#125;</h3>
         <p class="mb-4">Retrieve a value</p>
         
         <h4 class="font-bold mb-2">Headers</h4>
         <ul class="mb-4">
-          <li><code>Authorization: Bearer {'{apiKey}'}</code></li>
+          <li><code set:html="Authorization: Bearer {apiKey}"></code></li>
         </ul>
 
         <h4 class="font-bold mb-2">Response</h4>
         <p class="mb-2"><strong>200 OK</strong></p>
-        <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-4"><code>{
+        <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-4"><code set:html={`{
   "value": any
-}</code></pre>
+}`}></code></pre>
 
         <p class="mb-2"><strong>404 Not Found</strong></p>
-        <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-4"><code>{
+        <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-4"><code set:html={`{
   "error": "Key not found"
-}</code></pre>
+}`}></code></pre>
 
         <h4 class="font-bold mb-2">Example</h4>
         <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto"><code>curl "https://api.kv.vberkoz.com/v1/myapp/config" \\
@@ -79,19 +79,19 @@ import Layout from '../../layouts/Layout.astro';
       </div>
 
       <div class="mb-12">
-        <h3 class="text-2xl font-bold mb-3">DELETE /v1/{namespace}/{key}</h3>
+        <h3 class="text-2xl font-bold mb-3">DELETE /v1/&#123;namespace&#125;/&#123;key&#125;</h3>
         <p class="mb-4">Delete a value</p>
         
         <h4 class="font-bold mb-2">Headers</h4>
         <ul class="mb-4">
-          <li><code>Authorization: Bearer {'{apiKey}'}</code></li>
+          <li><code set:html="Authorization: Bearer {apiKey}"></code></li>
         </ul>
 
         <h4 class="font-bold mb-2">Response</h4>
         <p class="mb-2"><strong>200 OK</strong></p>
-        <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-4"><code>{
+        <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-4"><code set:html={`{
   "message": "Value deleted successfully"
-}</code></pre>
+}`}></code></pre>
 
         <h4 class="font-bold mb-2">Example</h4>
         <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto"><code>curl -X DELETE "https://api.kv.vberkoz.com/v1/myapp/config" \\
@@ -104,19 +104,19 @@ import Layout from '../../layouts/Layout.astro';
         
         <h4 class="font-bold mb-2">Headers</h4>
         <ul class="mb-4">
-          <li><code>Authorization: Bearer {'{token}'}</code> (JWT from login)</li>
+          <li><code set:html="Authorization: Bearer {token}"></code> (JWT from login)</li>
         </ul>
 
         <h4 class="font-bold mb-2">Response</h4>
-        <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto"><code>{
+        <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto"><code set:html={`{
   "namespaces": [
     {"name": "myapp", "createdAt": "2024-01-01T00:00:00Z"}
   ]
-}</code></pre>
+}`}></code></pre>
       </div>
 
       <div class="mb-12">
-        <h3 class="text-2xl font-bold mb-3">GET /v1/{namespace}</h3>
+        <h3 class="text-2xl font-bold mb-3">GET /v1/&#123;namespace&#125;</h3>
         <p class="mb-4">List keys in a namespace (supports prefix filtering)</p>
         
         <h4 class="font-bold mb-2">Query Parameters</h4>
@@ -125,9 +125,9 @@ import Layout from '../../layouts/Layout.astro';
         </ul>
 
         <h4 class="font-bold mb-2">Response</h4>
-        <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto"><code>{
+        <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto"><code set:html={`{
   "keys": ["user:123", "user:456"]
-}</code></pre>
+}`}></code></pre>
       </div>
 
       <hr class="my-8" />

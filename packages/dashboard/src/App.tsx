@@ -3,19 +3,20 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import AuthCallback from './pages/AuthCallback';
 import DashboardPage from './pages/DashboardPage';
 import NamespacesPage from './pages/NamespacesPage';
 import ApiExplorerPage from './pages/ApiExplorerPage';
-import PricingPage from './pages/PricingPage';
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider>
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/auth-callback" element={<AuthCallback />} />
           <Route
             path="/dashboard"
             element={
@@ -40,17 +41,10 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/pricing"
-            element={
-              <ProtectedRoute>
-                <PricingPage />
-              </ProtectedRoute>
-            }
-          />
+
         </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

@@ -24,10 +24,10 @@ import Layout from '../../layouts/Layout.astro';
 
       <h2 class="text-2xl font-bold mb-4">3. Store a Value</h2>
       <p class="mb-4">Use the PUT endpoint to store data:</p>
-      <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-6"><code>curl -X PUT "https://api.kv.vberkoz.com/v1/myapp/user:123" \\
+      <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-6"><code set:html={`curl -X PUT "https://api.kv.vberkoz.com/v1/myapp/user:123" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
-  -d '{"value": {"name": "John", "email": "john@example.com"}}'</code></pre>
+  -d '{"value": {"name": "John", "email": "john@example.com"}}'`}></code></pre>
 
       <h2 class="text-2xl font-bold mb-4">4. Retrieve the Value</h2>
       <p class="mb-4">Use the GET endpoint to fetch data:</p>
@@ -35,12 +35,12 @@ import Layout from '../../layouts/Layout.astro';
   -H "Authorization: Bearer YOUR_API_KEY"</code></pre>
 
       <p class="mb-4">Response:</p>
-      <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-6"><code>{
+      <pre class="bg-gray-900 text-white p-4 rounded overflow-x-auto mb-6"><code set:html={`{
   "value": {
     "name": "John",
     "email": "john@example.com"
   }
-}</code></pre>
+}`}></code></pre>
 
       <h2 class="text-2xl font-bold mb-4">5. Delete a Value</h2>
       <p class="mb-4">Use the DELETE endpoint to remove data:</p>

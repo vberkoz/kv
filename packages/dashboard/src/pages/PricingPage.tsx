@@ -40,7 +40,7 @@ export default function PricingPage() {
       if (window.Paddle) {
         window.Paddle.Checkout.open({
           items: [{ priceId, quantity: 1 }],
-          customData: { userId: user?.userId }
+          customData: { userId: user?.email }
         });
       }
       setLoading(false);
@@ -54,7 +54,7 @@ export default function PricingPage() {
       storage: '10GB',
       requests: '10K or 30 days',
       features: ['All features', 'No credit card required', 'Whichever comes first'],
-      current: user?.plan === 'trial',
+      current: false,
       isTrial: true
     },
     {
@@ -64,7 +64,7 @@ export default function PricingPage() {
       requests: '500K',
       features: ['Email support', 'Advanced analytics', 'Cancel anytime'],
       priceId: process.env.VITE_PADDLE_STARTER_PRICE_ID,
-      current: user?.plan === 'starter'
+      current: false
     },
     {
       name: 'Pro',
@@ -73,7 +73,7 @@ export default function PricingPage() {
       requests: '1M',
       features: ['Priority support', 'Custom domains', 'Advanced features'],
       priceId: process.env.VITE_PADDLE_PRO_PRICE_ID,
-      current: user?.plan === 'pro',
+      current: false,
       popular: true
     },
     {
@@ -83,7 +83,7 @@ export default function PricingPage() {
       requests: '5M',
       features: ['SLA 99.9%', 'Dedicated support', 'Custom integrations'],
       priceId: process.env.VITE_PADDLE_SCALE_PRICE_ID,
-      current: user?.plan === 'scale'
+      current: false
     },
     {
       name: 'Business',
@@ -92,7 +92,7 @@ export default function PricingPage() {
       requests: '20M',
       features: ['SLA 99.95%', 'White-label', 'Custom SLA', 'Priority support'],
       priceId: process.env.VITE_PADDLE_BUSINESS_PRICE_ID,
-      current: user?.plan === 'business'
+      current: false
     }
   ];
 

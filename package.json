@@ -2,21 +2,27 @@
   "name": "kv-storage",
   "version": "1.0.0",
   "private": true,
-  "workspaces": ["packages/shared", "packages/infrastructure", "packages/landing", "packages/dashboard", "packages/sdk-js"],
+  "workspaces": [
+    "packages/shared",
+    "packages/infrastructure",
+    "packages/landing",
+    "packages/dashboard",
+    "packages/sdk-js"
+  ],
   "scripts": {
-    "build": "pnpm -r build",
-    "dev": "pnpm -r dev",
-    "build:frontend": "pnpm --filter landing build && pnpm --filter dashboard build",
-    "build:sdk": "pnpm --filter @kv-storage/client build",
-    "deploy:infra": "pnpm --filter infrastructure deploy",
-    "deploy:frontend": "pnpm --filter landing build && pnpm --filter dashboard build",
-    "deploy:all": "pnpm build:frontend && pnpm --filter infrastructure deploy",
+    "build": "npm run build --workspaces --if-present",
+    "dev": "npm run dev --workspaces --if-present",
+    "build:frontend": "npm run build -w landing && npm run build -w dashboard",
+    "build:sdk": "npm run build -w @kv-storage/client",
+    "deploy:infra": "npm run deploy -w @kv/infrastructure",
+    "deploy:frontend": "npm run build -w landing && npm run build -w dashboard",
+    "deploy:all": "npm run build:frontend && npm run deploy -w infrastructure",
     "loadtest": "artillery run artillery.yml",
-    "clean": "pnpm -r clean && rm -rf node_modules"
+    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
     "@types/node": "^20.0.0",
-    "artillery": "^2.0.0"
+    "artillery": "^2.0.0",
+    "typescript": "^5.0.0"
   }
 }

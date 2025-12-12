@@ -4,8 +4,6 @@ import { docClient, TABLE_NAME } from './shared/dynamodb';
 import { successResponse, errorResponse } from './shared/response';
 import * as jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
-
 const PLAN_LIMITS = {
   free: { requests: 100000, storage: 25 * 1024 * 1024 * 1024 },
   pro: { requests: 1000000, storage: 100 * 1024 * 1024 * 1024 },
@@ -17,9 +15,11 @@ export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
     const token = event.headers.authorization?.replace('Bearer ', '');
     if (!token) return errorResponse('Missing token', 401);
 
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    const userId = decoded.userId;
-    const plan = decoded.plan;
+    const decoded = jwt.decode(token) as any;
+    if (!decoded) return errorResponse('Invalid token', 401);
+    
+    const userId = decoded.email || decoded.sub;
+    const plan = 'free';
     const month = new Date().toISOString().slice(0, 7);
 
     const result = await docClient.send(new GetCommand({

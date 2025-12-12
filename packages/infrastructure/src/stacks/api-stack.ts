@@ -1,8 +1,11 @@
 import { Stack, StackProps, CfnOutput } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { HttpApi, HttpMethod, CorsHttpMethod } from 'aws-cdk-lib/aws-apigatewayv2';
+import { HttpApi, HttpMethod, CorsHttpMethod, DomainName } from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { Certificate, CertificateValidation } from 'aws-cdk-lib/aws-certificatemanager';
+import { HostedZone, ARecord, RecordTarget } from 'aws-cdk-lib/aws-route53';
+import { ApiGatewayv2DomainProperties } from 'aws-cdk-lib/aws-route53-targets';
 
 interface ApiStackProps extends StackProps {
   getValue: NodejsFunction;
@@ -24,13 +27,35 @@ export class ApiStack extends Stack {
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
 
+    const baseDomain = process.env.DOMAIN_NAME || 'vberkoz.com';
+    const apiDomainName = `api.kv.${baseDomain}`;
+    const hostedZone = HostedZone.fromLookup(this, 'HostedZone', {
+      domainName: baseDomain
+    });
+
+    const certificate = new Certificate(this, 'ApiCertificate', {
+      domainName: apiDomainName,
+      validation: CertificateValidation.fromDns(hostedZone)
+    });
+
+    const customDomain = new DomainName(this, 'ApiDomain', {
+      domainName: apiDomainName,
+      certificate
+    });
+
     this.api = new HttpApi(this, 'KVStorageApi', {
+      defaultDomainMapping: {
+        domainName: customDomain
+      },
       apiName: 'KV Storage API',
       description: 'Serverless key-value storage API',
       corsPreflight: {
-        allowOrigins: ['*'],
+        allowOrigins: [
+          `https://kv.${baseDomain}`,
+          `https://dashboard.kv.${baseDomain}`
+        ],
         allowMethods: [CorsHttpMethod.ANY],
-        allowHeaders: ['Content-Type', 'Authorization']
+        allowHeaders: ['Content-Type', 'Authorization', 'x-api-key']
       }
     });
 
@@ -100,9 +125,23 @@ export class ApiStack extends Stack {
       integration: new HttpLambdaIntegration('DeleteValueIntegration', props.deleteValue)
     });
 
+    new ARecord(this, 'ApiAliasRecord', {
+      zone: hostedZone,
+      recordName: apiDomainName,
+      target: RecordTarget.fromAlias(new ApiGatewayv2DomainProperties(
+        customDomain.regionalDomainName,
+        customDomain.regionalHostedZoneId
+      ))
+    });
+
     new CfnOutput(this, 'ApiUrl', {
       value: this.api.apiEndpoint,
       description: 'API Gateway URL'
+    });
+
+    new CfnOutput(this, 'CustomDomainUrl', {
+      value: `https://${apiDomainName}`,
+      description: 'Custom Domain URL'
     });
   }
 }
