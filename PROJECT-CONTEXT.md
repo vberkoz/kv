@@ -644,6 +644,78 @@ lastUpdated: ISO timestamp
 - Graceful fallback to 0 if fetch fails
 - No loading spinner to avoid UI flicker
 
+### ApiTester - Enhanced UX
+
+**Location:** `/packages/dashboard/src/components/ApiTester.tsx`
+
+**Enhanced Features:**
+
+1. **Response Viewer with Syntax Highlighting:**
+   - Success responses shown in green-tinted terminal style
+   - JSON formatted with 2-space indentation
+   - Monospace font for readability
+   - Checkmark icon for successful responses
+   - Max height with scroll for large responses
+
+2. **Inline Error Messages:**
+   - Replaced browser alerts with styled error boxes
+   - Red-tinted background with border
+   - Warning icon for visual emphasis
+   - Separate error state from response state
+   - Shows HTTP status codes and error messages
+   - JSON validation errors displayed inline
+
+3. **Loading States:**
+   - Button text changes during requests ("Sending...", "Fetching...", "Deleting...")
+   - Buttons disabled during loading to prevent duplicate requests
+   - Visual feedback for all operations
+
+4. **Error Handling:**
+   - HTTP errors: Shows status code, status text, and error message
+   - Network errors: Shows connection error message
+   - JSON validation: Shows "Invalid JSON format" for PUT operations
+   - Errors cleared on new request
+
+**Implementation Details:**
+- Separate `error` and `response` state variables
+- Error state cleared before each request
+- HTTP status checked with `res.ok` before parsing
+- Try-catch for network and parsing errors
+- Conditional rendering for error vs success states
+
+### NamespaceDetails - Custom Dialogs
+
+**Location:** `/packages/dashboard/src/components/NamespaceDetails.tsx`
+
+**Custom Dialog Features:**
+
+1. **Value Viewer Dialog:**
+   - Replaces browser alert for viewing key values
+   - Blue-tinted box with close button
+   - Syntax-highlighted JSON display
+   - Monospace font with proper formatting
+   - Dismissible with X button
+
+2. **Delete Confirmation Dialog:**
+   - Replaces browser confirm dialog
+   - Yellow-tinted warning box
+   - Shows key name in code block
+   - Delete and Cancel buttons
+   - Warning icon for visual emphasis
+
+3. **Error Messages:**
+   - Red-tinted error box for all errors
+   - Dismissible with X button
+   - Shows fetch and delete errors inline
+   - Cleared automatically on new actions
+
+**Implementation Details:**
+- `viewData` state for value viewer
+- `deleteConfirm` state for delete confirmation
+- `error` state for error messages
+- All dialogs rendered inline above content
+- No browser dialogs used anywhere in the app
+
 ### Dashboard (React)
 
 **Purpose:** User management interface  
@@ -663,6 +735,13 @@ lastUpdated: ISO timestamp
 - Highlights "Create Namespace" as primary action
 - Dismissible with localStorage persistence (key: `kv_onboarding_completed`)
 - Automatically navigates to Namespaces page on CTA click
+
+**API Testing:**
+- Interactive API tester component in namespace details
+- Supports GET, PUT, DELETE, and LIST operations
+- Syntax-highlighted response viewer
+- Inline error messages with visual feedback
+- Loading states on all buttons
 
 
 **Routing Structure:**
@@ -691,9 +770,9 @@ lastUpdated: ISO timestamp
 - `/packages/dashboard/src/components/ProtectedRoute.tsx` - Auth guard for routes
 - `/packages/dashboard/src/components/UsageStats.tsx` - Usage metrics display (color-coded status system)
 - `/packages/dashboard/src/components/ApiKeyDisplay.tsx` - API key management UI (enhanced copy feedback)
-- `/packages/dashboard/src/components/NamespaceDetails.tsx` - Namespace info and actions
+- `/packages/dashboard/src/components/NamespaceDetails.tsx` - Namespace info and actions (custom dialogs for view/delete)
 - `/packages/dashboard/src/components/StoredItems.tsx` - Key-value list viewer
-- `/packages/dashboard/src/components/ApiTester.tsx` - Interactive API testing tool
+- `/packages/dashboard/src/components/ApiTester.tsx` - Interactive API testing tool (enhanced with syntax highlighting and inline errors)
 - `/packages/dashboard/src/components/CodeExamples.tsx` - SDK usage examples
 - `/packages/dashboard/src/components/QuickStart.tsx` - Onboarding guide
 - `/packages/dashboard/src/components/UpgradePrompt.tsx` - Plan upgrade CTA
@@ -710,6 +789,8 @@ lastUpdated: ISO timestamp
 - Progressive onboarding for first-time users with step-by-step guide
 - React Hook Form + Zod validation for namespace creation with real-time feedback
 - Success toast notifications for form submissions
+- Enhanced API Tester with syntax highlighting and inline error messages
+- Custom dialogs replacing all browser alerts and confirms
 
 
 **State Management:**

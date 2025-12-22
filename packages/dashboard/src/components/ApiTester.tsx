@@ -13,11 +13,13 @@ export default function ApiTester({ namespace, apiKey, keys, onRefresh }: ApiTes
   const [key, setKey] = useState('');
   const [value, setValue] = useState('{"name": "John"}');
   const [response, setResponse] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const executeRequest = async (method: string, url: string, body?: any) => {
     setLoading(true);
     setResponse('');
+    setError('');
     try {
       const res = await fetch(url, {
         method,
@@ -28,10 +30,14 @@ export default function ApiTester({ namespace, apiKey, keys, onRefresh }: ApiTes
         ...(body && { body: JSON.stringify(body) })
       });
       const data = await res.json();
-      setResponse(JSON.stringify(data, null, 2));
+      if (!res.ok) {
+        setError(`${res.status} ${res.statusText}: ${data.error || 'Request failed'}`);
+      } else {
+        setResponse(JSON.stringify(data, null, 2));
+      }
       onRefresh();
     } catch (error: any) {
-      setResponse(`Error: ${error.message}`);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
@@ -48,7 +54,7 @@ export default function ApiTester({ namespace, apiKey, keys, onRefresh }: ApiTes
       const parsedValue = JSON.parse(value);
       executeRequest('PUT', `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/v1/${namespace}/${key}`, { value: parsedValue });
     } catch {
-      setResponse('Error: Invalid JSON');
+      setError('Invalid JSON format');
     }
   };
 
@@ -154,10 +160,22 @@ export default function ApiTester({ namespace, apiKey, keys, onRefresh }: ApiTes
           </button>
         )}
 
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded p-3">
+            <div className="flex items-start gap-2">
+              <span className="text-red-600 text-lg">⚠</span>
+              <div>
+                <h4 className="font-semibold text-sm text-red-900 mb-1">Error</h4>
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {response && (
           <div>
-            <h4 className="font-semibold text-sm mb-1">Response:</h4>
-            <pre className="bg-gray-900 text-white p-3 rounded overflow-x-auto text-xs max-h-60">
+            <h4 className="font-semibold text-sm mb-1 text-green-700">✓ Response:</h4>
+            <pre className="bg-gray-900 text-green-400 p-3 rounded overflow-x-auto text-xs max-h-60 font-mono">
               {response}
             </pre>
           </div>
