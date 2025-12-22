@@ -2,7 +2,7 @@
 
 **Project Name:** KV Storage  
 **Tagline:** Serverless key-value storage API  
-**Status:** Implementation complete, UI/UX Phase 1 improvements deployed, Error Handling & Logging implemented, ready for launch
+**Status:** Implementation complete, UI/UX Phase 1 deployed, Error Handling & Logging implemented, Lambda Best Practices implemented, ready for launch
 
 ## Core Value Proposition
 
@@ -353,6 +353,15 @@ packages/dashboard/
 
 **Location:** `/packages/infrastructure/src/lambdas/shared/`
 
+**middleware.ts** - Middy Middleware Pattern
+- `loggingMiddleware()` - Automatic request/response logging with correlation IDs
+- `apiKeyAuthMiddleware()` - API key validation and user context injection
+- `errorHandlerMiddleware()` - Centralized error handling and response formatting
+- `createHandler(handler)` - Wrap handler with standard middleware (logging, error handling)
+- `createApiKeyHandler(handler)` - Wrap handler with auth + standard middleware
+- Reduces code duplication across Lambda functions
+- Automatic JSON body parsing with @middy/http-json-body-parser
+
 **logger.ts** - Structured Logging with Correlation IDs
 - `logger` - AWS Lambda Powertools Logger instance with service name and environment
 - `generateCorrelationId()` - Generate unique UUID for request tracking
@@ -380,10 +389,11 @@ packages/dashboard/
 - All authentication attempts logged with userId and outcome
 
 **dynamodb.ts** - Database Client & Helpers
-- `docClient` - DynamoDB DocumentClient instance
+- `docClient` - DynamoDB DocumentClient instance (initialized outside handler for connection reuse)
 - `TABLE_NAME` - Main table name constant
 - `GSI_NAME` - GSI name constant
-- Helper functions for common queries
+- Connection pooling enabled with marshallOptions
+- Client reused across Lambda invocations for better performance
 
 **response.ts** - HTTP Response Builders
 - `successResponse(data, statusCode, correlationId)` - Success response with correlation ID in headers
@@ -1718,6 +1728,11 @@ aws cloudfront create-invalidation \
 - `aws-jwt-verify` - Cognito JWT verification
 - `@aws-lambda-powertools/logger` v1.14.0+ - Structured logging with correlation IDs
 - `@aws-lambda-powertools/tracer` v1.14.0+ - X-Ray tracing integration
+- `@middy/core` v4.6.0+ - Lambda middleware engine
+- `@middy/http-json-body-parser` v4.6.0+ - Automatic JSON parsing
+- `@middy/http-error-handler` v4.6.0+ - Error handling middleware
+- `@middy/http-cors` v4.6.0+ - CORS middleware
+- `@middy/validator` v4.6.0+ - Request validation middleware
 - `pino` v8.16.0+ - High-performance JSON logger
 - `crypto` (built-in) - API key hashing and UUID generation
 - `zod` v3.22.4 - Runtime type validation and input sanitization
