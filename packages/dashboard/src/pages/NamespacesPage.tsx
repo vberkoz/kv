@@ -1,17 +1,24 @@
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import { useNamespaces, useCreateNamespace, useApiKey } from '../hooks/useApi';
 import NamespaceDetails from '../components/NamespaceDetails';
+import { namespaceSchema, type NamespaceFormData } from '../lib/validation';
 
 export default function NamespacesPage() {
-  const [newName, setNewName] = useState('');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [keyCounts, setKeyCounts] = useState<Record<string, number>>({});
+  const [showSuccess, setShowSuccess] = useState(false);
   const { data, isLoading } = useNamespaces();
   const { data: apiKeyData } = useApiKey();
   const createMutation = useCreateNamespace();
   const namespaces = data?.namespaces || [];
   const apiKey = apiKeyData?.apiKey || '';
+  
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<NamespaceFormData>({
+    resolver: zodResolver(namespaceSchema)
+  });
 
   useEffect(() => {
     if (!apiKey || namespaces.length === 0) return;
@@ -37,10 +44,11 @@ export default function NamespacesPage() {
     fetchKeyCounts();
   }, [apiKey, namespaces.length]);
 
-  const createNamespace = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await createMutation.mutateAsync(newName);
-    setNewName('');
+  const createNamespace = async (data: NamespaceFormData) => {
+    await createMutation.mutateAsync(data.name);
+    reset();
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
   };
 
   const toggleExpanded = (name: string) => {
@@ -55,29 +63,45 @@ export default function NamespacesPage() {
         </div>
         
         <div className="bg-white p-6 rounded-lg shadow mb-6">
+          {showSuccess && (
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3 animate-fade-in">
+              <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-green-800 font-medium">Namespace created successfully!</span>
+            </div>
+          )}
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
             </svg>
             Create New Namespace
           </h2>
-          <form onSubmit={createNamespace} className="flex flex-col sm:flex-row gap-3">
+          <form onSubmit={handleSubmit(createNamespace)} className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1">
               <input
+                {...register('name')}
                 type="text"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
                 placeholder="my-namespace"
-                pattern="[a-z0-9-]{1,50}"
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
+                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.name ? 'border-red-500' : 'border-gray-300'
+                }`}
               />
-              <p className="mt-2 text-xs text-gray-500 flex items-center gap-1">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Use lowercase letters, numbers, and hyphens only (1-50 characters)
-              </p>
+              {errors.name ? (
+                <p className="mt-2 text-xs text-red-600 flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {errors.name.message}
+                </p>
+              ) : (
+                <p className="mt-2 text-xs text-gray-500 flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Use lowercase letters, numbers, and hyphens only (1-50 characters)
+                </p>
+              )}
             </div>
             <button
               type="submit"

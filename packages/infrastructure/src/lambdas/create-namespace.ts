@@ -3,6 +3,7 @@ import { PutCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient, TABLE_NAME } from './shared/dynamodb';
 import { validateToken } from './shared/auth';
 import { successResponse, errorResponse } from './shared/response';
+import { createNamespaceSchema, validate } from './shared/validation';
 
 export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
   try {
@@ -11,11 +12,13 @@ export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
 
     const user = await validateToken(token);
     const body = JSON.parse(event.body || '{}');
-    const { name } = body;
-
-    if (!name || !/^[a-z0-9-]{1,50}$/.test(name)) {
-      return errorResponse('Invalid namespace name', 400);
+    
+    const validation = validate(createNamespaceSchema, body);
+    if (!validation.success) {
+      return errorResponse(validation.error, 400);
     }
+    
+    const { name } = validation.data;
 
     const now = new Date().toISOString();
 

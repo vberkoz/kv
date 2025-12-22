@@ -140,7 +140,8 @@ packages/infrastructure/
 │   │   │   ├── auth.ts        # JWT verification, API key validation
 │   │   │   ├── dynamodb.ts    # DynamoDB client and helpers
 │   │   │   ├── response.ts    # HTTP response builders
-│   │   │   └── usage.ts       # Usage tracking utilities
+│   │   │   ├── usage.ts       # Usage tracking utilities
+│   │   │   └── validation.ts  # Zod input validation schemas
 │   │   ├── create-namespace.ts
 │   │   ├── delete-value.ts
 │   │   ├── generate-api-key.ts
@@ -260,6 +261,7 @@ packages/dashboard/
 - `/packages/dashboard/src/context/AuthContext.tsx` - Authentication state
 - `/packages/dashboard/src/services/api.ts` - API client
 - `/packages/dashboard/src/pages/` - All page components
+- `/packages/dashboard/src/lib/validation.ts` - Zod validation schemas for forms
 
 ### @kv-storage/client
 **Purpose:** Official JavaScript/TypeScript SDK
@@ -365,6 +367,14 @@ packages/dashboard/
 - `incrementRequestCount(userId: string)` - Increment request counter
 - `getUsageStats(userId: string)` - Get current usage metrics
 - Plan limits enforcement
+
+**validation.ts** - Input Validation with Zod
+- `namespaceSchema` - Validates namespace names (lowercase alphanumeric + hyphens, max 50 chars)
+- `keySchema` - Validates key names (alphanumeric + :_.- chars, max 255 chars)
+- `valueSchema` - Validates JSON payload size (max 400KB)
+- `createNamespaceSchema` - Request schema for namespace creation
+- `putValueSchema` - Request schema for storing values
+- `validate<T>(schema, data)` - Helper function for validation with error messages
 
 ### Authentication Flow
 
@@ -698,6 +708,8 @@ lastUpdated: ISO timestamp
 - Rich empty states with helpful guidance
 - Skeleton loading animations throughout
 - Progressive onboarding for first-time users with step-by-step guide
+- React Hook Form + Zod validation for namespace creation with real-time feedback
+- Success toast notifications for form submissions
 
 
 **State Management:**
@@ -708,6 +720,11 @@ lastUpdated: ISO timestamp
 
 **Custom Hooks:**
 - `/packages/dashboard/src/hooks/useApi.ts` - API calls with auth headers
+
+**Validation:**
+- `/packages/dashboard/src/lib/validation.ts` - Zod schemas for form validation
+  - `namespaceSchema` - Validates namespace names (lowercase alphanumeric + hyphens, starts with letter, 1-50 chars)
+  - Type-safe form data with TypeScript inference
 
 **Services:**
 - `/packages/dashboard/src/services/api.ts` - HTTP client for backend API
@@ -1424,6 +1441,7 @@ aws cloudfront create-invalidation \
 - `@aws-sdk/lib-dynamodb` - DynamoDB document client
 - `aws-jwt-verify` - Cognito JWT verification
 - `crypto` (built-in) - API key hashing
+- `zod` v3.22.4 - Runtime type validation and input sanitization
 
 **Infrastructure (CDK):**
 - `aws-cdk-lib` - AWS CDK v2 constructs
@@ -1433,6 +1451,9 @@ aws cloudfront create-invalidation \
 **Frontend (Dashboard):**
 - `react` v18 - UI library
 - `react-router-dom` v6 - Client-side routing
+- `react-hook-form` v7.48 - Form state management and validation
+- `zod` v3.22.4 - Schema validation for forms
+- `@hookform/resolvers` v3.3.2 - Zod resolver for React Hook Form
 - `tailwindcss` - Utility-first CSS
 - `vite` - Build tool and dev server
 

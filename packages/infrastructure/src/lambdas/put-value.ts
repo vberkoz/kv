@@ -3,6 +3,7 @@ import { PutCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient, TABLE_NAME } from './shared/dynamodb';
 import { validateApiKey } from './shared/auth';
 import { successResponse, errorResponse } from './shared/response';
+import { namespaceSchema, keySchema, putValueSchema, validate } from './shared/validation';
 
 export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
   try {
@@ -14,11 +15,22 @@ export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
     await validateApiKey(apiKey);
 
     const { namespace, key } = event.pathParameters || {};
-    if (!namespace || !key) {
-      return errorResponse('Missing namespace or key', 400);
+    
+    const nsValidation = validate(namespaceSchema, namespace);
+    if (!nsValidation.success) {
+      return errorResponse(nsValidation.error, 400);
+    }
+    
+    const keyValidation = validate(keySchema, key);
+    if (!keyValidation.success) {
+      return errorResponse(keyValidation.error, 400);
     }
 
     const body = JSON.parse(event.body || '{}');
+    const bodyValidation = validate(putValueSchema, body);
+    if (!bodyValidation.success) {
+      return errorResponse(bodyValidation.error, 400);
+    }
     const now = new Date().toISOString();
 
     await docClient.send(new PutCommand({
