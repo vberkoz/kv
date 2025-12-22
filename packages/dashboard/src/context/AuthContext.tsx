@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { AuthTokens, User } from '../types/auth';
-import { COGNITO_DOMAIN, COGNITO_CLIENT_ID, COGNITO_REDIRECT_URI, COGNITO_LOGOUT_URI, STORAGE_KEYS } from '../constants/config';
+import { COGNITO_DOMAIN, COGNITO_CLIENT_ID, COGNITO_REDIRECT_URI, COGNITO_LOGOUT_URI, STORAGE_KEYS, API_URL } from '../constants/config';
 
 interface AuthContextType {
   user: User | null;
@@ -9,6 +9,7 @@ interface AuthContextType {
   loginWithHostedUI: (provider?: 'Google') => void;
   logout: () => void;
   processAuthRedirect: (hash: string) => void;
+  fetchApiKey: () => Promise<{ apiKey: string; exampleNamespace: string; exampleKey: string } | null>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -53,6 +54,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const fetchApiKey = useCallback(async () => {
+    if (!tokens) return null;
+    
+    try {
+      const response = await fetch(`${API_URL}/v1/api-keys`, {
+        headers: {
+          'Authorization': `Bearer ${tokens.accessToken}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        return {
+          apiKey: data.apiKey,
+          exampleNamespace: data.exampleNamespace || 'my-app',
+          exampleKey: data.exampleKey || 'user:demo'
+        };
+      }
+      
+      if (response.status === 404) {
+        // No API key found, generate one
+        const generateResponse = await fetch(`${API_URL}/v1/api-keys`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${tokens.accessToken}`
+          }
+        });
+        
+        if (generateResponse.ok) {
+          const generateData = await generateResponse.json();
+          return {
+            apiKey: generateData.apiKey,
+            exampleNamespace: generateData.exampleNamespace || 'my-app',
+            exampleKey: generateData.exampleKey || 'user:demo'
+          };
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Failed to fetch/generate API key:', error);
+      return null;
+    }
+  }, [tokens]);
+
+  // Remove the automatic fetching since ApiKeyDisplay will handle it
+
   const loginWithHostedUI = useCallback((provider?: 'Google') => {
     const providerParam = provider ? `&identity_provider=${provider}` : '';
     const authUrl = `${COGNITO_DOMAIN}/oauth2/authorize?` +
@@ -95,6 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setTokens(null);
     setUser(null);
     localStorage.removeItem(STORAGE_KEYS.COGNITO_TOKENS);
+    // No need to remove apiKey from localStorage since we don't store it
     
     const logoutUrl = `${COGNITO_DOMAIN}/logout?` +
       `client_id=${COGNITO_CLIENT_ID}&` +
@@ -105,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAuthenticated = !!tokens && tokens.expiresAt > Date.now();
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, loginWithHostedUI, logout, processAuthRedirect }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, loginWithHostedUI, logout, processAuthRedirect, fetchApiKey }}>
       {children}
     </AuthContext.Provider>
   );

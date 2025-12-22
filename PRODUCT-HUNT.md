@@ -20,7 +20,7 @@ Traditional databases require setup, maintenance, and scaling. KV Storage elimin
 ✅ Namespaces for data organization
 ✅ Built-in rate limiting
 ✅ Usage tracking and alerts
-✅ TypeScript & Python SDKs
+✅ TypeScript SDK
 ✅ Free tier: 100K requests/month
 
 **Perfect For:**
@@ -93,7 +93,7 @@ Simple serverless key-value storage API for modern apps.
 ✅ No infrastructure setup
 ✅ REST API in 5 minutes
 ✅ Free tier: 100K requests/month
-✅ TypeScript & Python SDKs
+✅ TypeScript SDK
 
 Perfect for serverless apps, MVPs, and side projects.
 
@@ -112,7 +112,7 @@ Key features:
 • Simple REST API (GET, PUT, DELETE)
 • Namespaces for data organization
 • Built-in rate limiting and usage tracking
-• TypeScript & Python SDKs
+• TypeScript SDK
 • Free tier: 100K requests/month
 
 Perfect for:
@@ -178,7 +178,7 @@ A: Absolutely! Built on AWS infrastructure with 99.9% uptime SLA.
 A: Free tier includes 100K requests/month. Pro plan is $10/mo for 1M requests. Very affordable for most use cases.
 
 **Q: Do you have SDKs?**
-A: Yes! TypeScript and Python SDKs available on npm and PyPI.
+A: Yes! TypeScript SDK available on npm.
 
 **Q: What about security?**
 A: API key authentication with SHA-256 hashing, rate limiting, and HTTPS encryption.

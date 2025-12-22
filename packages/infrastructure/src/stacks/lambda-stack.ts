@@ -23,6 +23,7 @@ export class LambdaStack extends Stack {
   public readonly signup: NodejsFunction;
   public readonly login: NodejsFunction;
   public readonly generateApiKey: NodejsFunction;
+  public readonly getApiKey: NodejsFunction;
   public readonly getUsage: NodejsFunction;
   public readonly paddleWebhook: NodejsFunction;
   public readonly resetUsage: NodejsFunction;
@@ -123,6 +124,15 @@ export class LambdaStack extends Stack {
       bundling
     });
 
+    this.getApiKey = new NodejsFunction(this, 'GetApiKeyFunction', {
+      entry: 'src/lambdas/get-api-key.ts',
+      handler: 'handler',
+      runtime: Runtime.NODEJS_18_X,
+      timeout: Duration.seconds(10),
+      environment,
+      bundling
+    });
+
     this.getUsage = new NodejsFunction(this, 'GetUsageFunction', {
       entry: 'src/lambdas/get-usage.ts',
       handler: 'handler',
@@ -137,10 +147,11 @@ export class LambdaStack extends Stack {
     props.table.grantReadWriteData(this.deleteValue);
     props.table.grantReadWriteData(this.createNamespace);
     props.table.grantReadWriteData(this.listNamespaces);
-    props.table.grantReadData(this.listKeys);
+    props.table.grantReadWriteData(this.listKeys);
     props.table.grantReadWriteData(this.signup);
     props.table.grantReadData(this.login);
     props.table.grantReadWriteData(this.generateApiKey);
+    props.table.grantReadData(this.getApiKey);
     props.table.grantReadData(this.getUsage);
 
     this.paddleWebhook = new NodejsFunction(this, 'PaddleWebhookFunction', {

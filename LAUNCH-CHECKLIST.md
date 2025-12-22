@@ -47,7 +47,6 @@
 - [x] Complete API reference
 - [x] Real-world examples (6 use cases)
 - [x] TypeScript SDK with README
-- [x] Python SDK with README
 - [x] SEO meta tags
 - [ ] Video tutorial
 - [ ] Troubleshooting guide

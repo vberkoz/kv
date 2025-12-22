@@ -23,7 +23,7 @@ export class KVClient {
 
   async get<T = any>(namespace: string, key: string): Promise<KVResponse<T>> {
     const res = await fetch(`${this.baseUrl}/v1/${namespace}/${key}`, {
-      headers: { 'Authorization': `Bearer ${this.apiKey}` }
+      headers: { 'x-api-key': this.apiKey }
     });
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -35,7 +35,7 @@ export class KVClient {
     const res = await fetch(`${this.baseUrl}/v1/${namespace}/${key}`, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        'x-api-key': this.apiKey,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ value })
@@ -49,7 +49,7 @@ export class KVClient {
   async delete(namespace: string, key: string): Promise<void> {
     const res = await fetch(`${this.baseUrl}/v1/${namespace}/${key}`, {
       method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${this.apiKey}` }
+      headers: { 'x-api-key': this.apiKey }
     });
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -62,7 +62,7 @@ export class KVClient {
       : `${this.baseUrl}/v1/${namespace}`;
     
     const res = await fetch(url, {
-      headers: { 'Authorization': `Bearer ${this.apiKey}` }
+      headers: { 'x-api-key': this.apiKey }
     });
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}: ${res.statusText}`);

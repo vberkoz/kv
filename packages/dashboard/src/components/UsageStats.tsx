@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.kv.vberkoz.com';
+import { useEffect } from 'react';
+import { useUsage } from '../hooks/useApi';
 
 interface Usage {
   usage: { requests: number; storage: number };
@@ -13,31 +12,13 @@ interface UsageStatsProps {
 }
 
 export function UsageStats({ onUsageLoad }: UsageStatsProps) {
-  const [usage, setUsage] = useState<Usage | null>(null);
+  const { data: usage, isLoading } = useUsage();
 
   useEffect(() => {
-    const fetchUsage = async () => {
-      const tokensStr = localStorage.getItem('cognitoTokens');
-      if (!tokensStr) return;
-      
-      const tokens = JSON.parse(tokensStr);
-      const res = await fetch(`${API_URL}/v1/usage`, {
-        headers: { 'Authorization': `Bearer ${tokens.accessToken}` }
-      });
-      
-      if (!res.ok) {
-        console.error('Failed to fetch usage:', res.status);
-        return;
-      }
-      
-      const data = await res.json();
-      setUsage(data);
-      if (onUsageLoad) onUsageLoad(data);
-    };
-    fetchUsage();
-  }, [onUsageLoad]);
+    if (usage && onUsageLoad) onUsageLoad(usage);
+  }, [usage, onUsageLoad]);
 
-  if (!usage) return <div>Loading...</div>;
+  if (isLoading) return <div>Loading...</div>;
 
   const requestPercent = (usage.usage.requests / usage.limits.requests) * 100;
   const storagePercent = (usage.usage.storage / usage.limits.storage) * 100;

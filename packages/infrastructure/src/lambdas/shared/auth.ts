@@ -13,7 +13,9 @@ const verifier = CognitoJwtVerifier.create({
 
 export async function validateToken(token: string): Promise<AuthenticatedUser> {
   try {
+    console.log('Validating token:', token.substring(0, 50) + '...');
     const payload = await verifier.verify(token);
+    console.log('JWT payload:', JSON.stringify(payload, null, 2));
     const userId = payload.sub;
     
     const result = await docClient.send(new QueryCommand({
@@ -75,18 +77,32 @@ export async function validateApiKey(apiKey: string): Promise<AuthenticatedUser>
     throw new Error('Unauthorized');
   }
 
-  const user = result.Items[0];
+  const apiKeyItem = result.Items[0];
   
-  const allowed = await checkRateLimit(user.userId, user.plan, user.trialEndsAt);
+  // Get user profile for email
+  const userResult = await docClient.send(new QueryCommand({
+    TableName: TABLE_NAME,
+    KeyConditionExpression: 'PK = :pk AND SK = :sk',
+    ExpressionAttributeValues: {
+      ':pk': `USER#${apiKeyItem.userId}`,
+      ':sk': 'PROFILE'
+    }
+  }));
+
+  const user = userResult.Items?.[0];
+  const plan = user?.plan || apiKeyItem.plan || 'free';
+  const email = user?.email || '';
+  
+  const allowed = await checkRateLimit(apiKeyItem.userId, plan, user?.trialEndsAt);
   if (!allowed) {
     throw new Error('RateLimitExceeded');
   }
   
-  await incrementRequestCount(user.userId, user.email, user.plan);
+  await incrementRequestCount(apiKeyItem.userId, email, plan);
   
   return {
-    userId: user.userId,
-    plan: user.plan,
+    userId: apiKeyItem.userId,
+    plan,
     apiKey
   };
 }

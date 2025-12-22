@@ -6,7 +6,7 @@ import SignupPage from './pages/SignupPage';
 import AuthCallback from './pages/AuthCallback';
 import DashboardPage from './pages/DashboardPage';
 import NamespacesPage from './pages/NamespacesPage';
-import ApiExplorerPage from './pages/ApiExplorerPage';
+import PricingPage from './pages/PricingPage';
 
 function App() {
   return (
@@ -34,14 +34,13 @@ function App() {
             }
           />
           <Route
-            path="/explorer"
+            path="/pricing"
             element={
               <ProtectedRoute>
-                <ApiExplorerPage />
+                <PricingPage />
               </ProtectedRoute>
             }
           />
-
         </Routes>
       </AuthProvider>
     </BrowserRouter>

@@ -28,7 +28,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <nav className="flex-1 px-4">
           <Link to="/dashboard" className="block py-3 px-4 rounded hover:bg-gray-100">Dashboard</Link>
           <Link to="/namespaces" className="block py-3 px-4 rounded hover:bg-gray-100">Namespaces</Link>
-          <Link to="/explorer" className="block py-3 px-4 rounded hover:bg-gray-100">API Explorer</Link>
+          <Link to="/pricing" className="block py-3 px-4 rounded hover:bg-gray-100">Pricing</Link>
         </nav>
         <div className="p-4 border-t">
           <button onClick={logout} className="w-full px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Logout</button>

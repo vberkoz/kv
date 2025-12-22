@@ -1,49 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import DashboardLayout from '../components/layout/DashboardLayout';
-import { API_URL, STORAGE_KEYS } from '../constants/config';
-
-interface Namespace {
-  name: string;
-  createdAt: string;
-}
+import { useNamespaces, useCreateNamespace, useApiKey } from '../hooks/useApi';
+import NamespaceDetails from '../components/NamespaceDetails';
 
 export default function NamespacesPage() {
-  const [namespaces, setNamespaces] = useState<Namespace[]>([]);
   const [newName, setNewName] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const fetchNamespaces = async () => {
-    const tokensStr = localStorage.getItem(STORAGE_KEYS.COGNITO_TOKENS);
-    if (!tokensStr) return;
-    const tokens = JSON.parse(tokensStr);
-    const res = await fetch(`${API_URL}/v1/namespaces`, {
-      headers: { 'Authorization': `Bearer ${tokens.accessToken}` }
-    });
-    const data = await res.json();
-    setNamespaces(data.namespaces);
-  };
-
-  useEffect(() => {
-    fetchNamespaces();
-  }, []);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const { data, isLoading } = useNamespaces();
+  const { data: apiKeyData } = useApiKey();
+  const createMutation = useCreateNamespace();
+  const namespaces = data?.namespaces || [];
+  const apiKey = apiKeyData?.apiKey || '';
 
   const createNamespace = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    const tokensStr = localStorage.getItem(STORAGE_KEYS.COGNITO_TOKENS);
-    if (!tokensStr) return;
-    const tokens = JSON.parse(tokensStr);
-    await fetch(`${API_URL}/v1/namespaces`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${tokens.accessToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ name: newName })
-    });
+    await createMutation.mutateAsync(newName);
     setNewName('');
-    setLoading(false);
-    fetchNamespaces();
+  };
+
+  const toggleExpanded = (name: string) => {
+    setExpanded(prev => ({ ...prev, [name]: !prev[name] }));
   };
 
   return (
@@ -61,20 +37,38 @@ export default function NamespacesPage() {
           />
           <button
             type="submit"
-            disabled={loading}
+            disabled={createMutation.isPending}
             className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
           >
             Create
           </button>
         </form>
         <div className="bg-white rounded-lg shadow">
-          {namespaces.length === 0 ? (
+          {isLoading ? (
+            <div className="p-4 text-gray-600 text-center">Loading...</div>
+          ) : namespaces.length === 0 ? (
             <div className="p-4 text-gray-600 text-center">No namespaces yet. Create one above.</div>
           ) : (
-            namespaces.map((ns) => (
-              <div key={ns.name} className="p-4 border-b last:border-b-0">
-                <div className="font-semibold">{ns.name}</div>
-                <div className="text-sm text-gray-600">Created: {new Date(ns.createdAt).toLocaleDateString()}</div>
+            namespaces.map((ns: { name: string; createdAt: string }) => (
+              <div key={ns.name} className="border-b last:border-b-0">
+                <div
+                  className="p-4 cursor-pointer hover:bg-gray-50 flex justify-between items-center"
+                  onClick={() => toggleExpanded(ns.name)}
+                >
+                  <div>
+                    <div className="font-semibold">{ns.name}</div>
+                    <div className="text-sm text-gray-600">Created: {new Date(ns.createdAt).toLocaleDateString()}</div>
+                  </div>
+                  <svg
+                    className={`w-5 h-5 transition-transform ${expanded[ns.name] ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+                {expanded[ns.name] && <NamespaceDetails namespace={ns.name} apiKey={apiKey} />}
               </div>
             ))
           )}

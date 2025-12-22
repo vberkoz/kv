@@ -1,6 +1,7 @@
 import { Stack, StackProps, CfnOutput } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { HttpApi, HttpMethod, CorsHttpMethod, DomainName } from 'aws-cdk-lib/aws-apigatewayv2';
+import { HttpJwtAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Certificate, CertificateValidation } from 'aws-cdk-lib/aws-certificatemanager';
@@ -17,8 +18,11 @@ interface ApiStackProps extends StackProps {
   signup: NodejsFunction;
   login: NodejsFunction;
   generateApiKey: NodejsFunction;
+  getApiKey: NodejsFunction;
   getUsage: NodejsFunction;
   paddleWebhook: NodejsFunction;
+  userPoolId: string;
+  userPoolClientId: string;
 }
 
 export class ApiStack extends Stack {
@@ -41,6 +45,11 @@ export class ApiStack extends Stack {
     const customDomain = new DomainName(this, 'ApiDomain', {
       domainName: apiDomainName,
       certificate
+    });
+
+    // Create JWT authorizer for Cognito
+    const jwtAuthorizer = new HttpJwtAuthorizer('CognitoAuthorizer', `https://cognito-idp.us-east-1.amazonaws.com/${props.userPoolId}`, {
+      jwtAudience: [props.userPoolClientId]
     });
 
     this.api = new HttpApi(this, 'KVStorageApi', {
@@ -74,13 +83,22 @@ export class ApiStack extends Stack {
     this.api.addRoutes({
       path: '/v1/api-keys',
       methods: [HttpMethod.POST],
-      integration: new HttpLambdaIntegration('GenerateApiKeyIntegration', props.generateApiKey)
+      integration: new HttpLambdaIntegration('GenerateApiKeyIntegration', props.generateApiKey),
+      authorizer: jwtAuthorizer
+    });
+
+    this.api.addRoutes({
+      path: '/v1/api-keys',
+      methods: [HttpMethod.GET],
+      integration: new HttpLambdaIntegration('GetApiKeyIntegration', props.getApiKey),
+      authorizer: jwtAuthorizer
     });
 
     this.api.addRoutes({
       path: '/v1/usage',
       methods: [HttpMethod.GET],
-      integration: new HttpLambdaIntegration('GetUsageIntegration', props.getUsage)
+      integration: new HttpLambdaIntegration('GetUsageIntegration', props.getUsage),
+      authorizer: jwtAuthorizer
     });
     
     this.api.addRoutes({
@@ -92,13 +110,15 @@ export class ApiStack extends Stack {
     this.api.addRoutes({
       path: '/v1/namespaces',
       methods: [HttpMethod.POST],
-      integration: new HttpLambdaIntegration('CreateNamespaceIntegration', props.createNamespace)
+      integration: new HttpLambdaIntegration('CreateNamespaceIntegration', props.createNamespace),
+      authorizer: jwtAuthorizer
     });
 
     this.api.addRoutes({
       path: '/v1/namespaces',
       methods: [HttpMethod.GET],
-      integration: new HttpLambdaIntegration('ListNamespacesIntegration', props.listNamespaces)
+      integration: new HttpLambdaIntegration('ListNamespacesIntegration', props.listNamespaces),
+      authorizer: jwtAuthorizer
     });
     
     this.api.addRoutes({

@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useApiKey } from '../hooks/useApi';
 
 export function ApiKeyDisplay() {
-  const [apiKey] = useState(localStorage.getItem('apiKey') || '');
   const [copied, setCopied] = useState(false);
+  const { data, isLoading } = useApiKey();
+  const apiKey = data?.apiKey || '';
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(apiKey);
@@ -16,13 +18,14 @@ export function ApiKeyDisplay() {
       <div className="flex flex-col sm:flex-row gap-2">
         <input
           type="text"
-          value={apiKey}
+          value={isLoading ? 'Loading...' : apiKey}
           readOnly
           className="flex-1 p-2 md:p-3 border rounded bg-gray-50 font-mono text-xs md:text-sm overflow-x-auto"
         />
         <button
           onClick={copyToClipboard}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 whitespace-nowrap"
+          disabled={isLoading || !apiKey}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 whitespace-nowrap disabled:opacity-50"
         >
           {copied ? 'Copied!' : 'Copy'}
         </button>

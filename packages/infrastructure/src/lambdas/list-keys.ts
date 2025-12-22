@@ -6,7 +6,7 @@ import { successResponse, errorResponse } from './shared/response';
 
 export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
   try {
-    const apiKey = event.headers.authorization?.replace('Bearer ', '');
+    const apiKey = event.headers['x-api-key'];
     if (!apiKey) return errorResponse('Missing API key', 401);
 
     await validateApiKey(apiKey);

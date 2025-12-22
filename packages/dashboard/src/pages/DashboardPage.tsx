@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { UsageStats } from '../components/UsageStats';
 import { ApiKeyDisplay } from '../components/ApiKeyDisplay';
+import { QuickStart } from '../components/QuickStart';
 import { UpgradePrompt } from '../components/UpgradePrompt';
 import DashboardLayout from '../components/layout/DashboardLayout';
 
@@ -15,15 +16,7 @@ export default function DashboardPage() {
         <UsageStats onUsageLoad={setUsage} />
         <ApiKeyDisplay />
       </div>
-      <div className="bg-white p-4 md:p-6 rounded-lg shadow">
-        <h2 className="text-lg md:text-xl font-bold mb-4">Quick Start</h2>
-        <pre className="bg-gray-900 text-white p-3 md:p-4 rounded overflow-x-auto text-xs md:text-sm">
-          <code>{`curl -X PUT "https://api.kv.vberkoz.com/v1/myapp/user:123" \\
-  -H "Authorization: Bearer ${localStorage.getItem('apiKey') || 'YOUR_API_KEY'}" \\
-  -H "Content-Type: application/json" \\
-  -d '{"value": {"name": "John"}}'`}</code>
-        </pre>
-      </div>
+      <QuickStart />
     </DashboardLayout>
   );
 }

@@ -9,7 +9,7 @@ Serverless key-value storage API powered by AWS DynamoDB. Simple REST API for st
 - **User Authentication**: Cognito-based auth with API key management
 - **Usage Tracking**: Monitor API calls and storage usage
 - **Subscription Plans**: Free, Starter, Pro, Scale, and Business tiers
-- **Client Libraries**: Official JavaScript/TypeScript and Python SDKs
+- **Client Libraries**: Official JavaScript/TypeScript SDK
 - **Dashboard**: React-based UI for managing namespaces and API keys
 - **Landing Page**: Astro-powered marketing site
 - **Serverless**: Auto-scaling with pay-per-use pricing
@@ -26,13 +26,12 @@ Serverless key-value storage API powered by AWS DynamoDB. Simple REST API for st
 
 ## Project Structure
 
-Monorepo with 6 packages:
+Monorepo with 5 packages:
 - **shared**: Common types and utilities
 - **infrastructure**: AWS CDK infrastructure code
 - **landing**: Astro landing page
 - **dashboard**: React dashboard application
 - **sdk-js**: JavaScript/TypeScript client library
-- **sdk-python**: Python client library
 
 ## Quick Start
 
@@ -71,8 +70,16 @@ STAGE=prod
 JWT_SECRET=your-jwt-secret
 PADDLE_WEBHOOK_SECRET=your-paddle-webhook-secret
 
+# Google OAuth
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
 # Paddle Configuration
 VITE_PADDLE_VENDOR_ID=your-paddle-vendor-id
+VITE_PADDLE_STARTER_PRICE_ID=pri_starter_monthly
+VITE_PADDLE_PRO_PRICE_ID=pri_pro_monthly
+VITE_PADDLE_SCALE_PRICE_ID=pri_scale_monthly
+VITE_PADDLE_BUSINESS_PRICE_ID=pri_business_monthly
 VITE_API_URL=https://api.your-domain.com
 VITE_DASHBOARD_URL=https://dashboard.your-domain.com
 
@@ -111,14 +118,14 @@ npm run deploy:infra
 ### Deploy Frontend
 
 ```bash
-# Build and deploy landing + dashboard to S3
+# Build landing + dashboard (manual S3 upload required)
 npm run deploy:frontend
 ```
 
 ### Deploy Everything
 
 ```bash
-# Build frontend and deploy all resources
+# Build frontend and deploy infrastructure
 npm run deploy:all
 ```
 
@@ -130,21 +137,21 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 
 ```bash
 # Store a value
-curl -X PUT https://api.your-domain.com/v1/kv/myapp/user:123 \
+curl -X PUT https://api.your-domain.com/v1/myapp/user:123 \
   -H "x-api-key: your-api-key" \
   -H "Content-Type: application/json" \
-  -d '{"name":"John","email":"john@example.com"}'
+  -d '{"value":{"name":"John","email":"john@example.com"}}'
 
 # Retrieve a value
-curl https://api.your-domain.com/v1/kv/myapp/user:123 \
+curl https://api.your-domain.com/v1/myapp/user:123 \
   -H "x-api-key: your-api-key"
 
 # List keys
-curl https://api.your-domain.com/v1/kv/myapp/keys \
+curl https://api.your-domain.com/v1/myapp \
   -H "x-api-key: your-api-key"
 
 # Delete a value
-curl -X DELETE https://api.your-domain.com/v1/kv/myapp/user:123 \
+curl -X DELETE https://api.your-domain.com/v1/myapp/user:123 \
   -H "x-api-key: your-api-key"
 ```
 
@@ -163,23 +170,6 @@ await kv.put('myapp', 'user:123', { name: 'John' });
 const { value } = await kv.get('myapp', 'user:123');
 const { keys } = await kv.list('myapp');
 await kv.delete('myapp', 'user:123');
-```
-
-### Python SDK
-
-```bash
-pip install kv-storage
-```
-
-```python
-from kv_storage import KVClient
-
-kv = KVClient('your-api-key')
-
-kv.put('myapp', 'user:123', {'name': 'John'})
-data = kv.get('myapp', 'user:123')
-result = kv.list('myapp')
-kv.delete('myapp', 'user:123')
 ```
 
 ## Testing
