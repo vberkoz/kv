@@ -36,6 +36,7 @@ export const apiKeyAuthMiddleware = (): middy.MiddlewareObj => ({
     }
     const user = await validateApiKey(apiKey);
     (request.context as any).user = user;
+    (request.context as any).rateLimitHeaders = user.rateLimitHeaders;
   }
 });
 
@@ -46,13 +47,14 @@ export const errorHandlerMiddleware = (): middy.MiddlewareObj => ({
     const correlationId = event.headers['x-correlation-id'];
     
     if (error instanceof AppError) {
+      const rateLimitHeaders = (error as any).rateLimitHeaders || {};
       request.response = {
         statusCode: error.statusCode,
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
           ...(correlationId && { 'x-correlation-id': correlationId }),
-          ...(error.statusCode === 429 && { 'Retry-After': '3600' })
+          ...rateLimitHeaders
         },
         body: JSON.stringify({
           error: error.message,
@@ -74,6 +76,15 @@ export const errorHandlerMiddleware = (): middy.MiddlewareObj => ({
           statusCode: 500,
           ...(correlationId && { correlationId })
         })
+      };
+    }
+  },
+  after: async (request) => {
+    const rateLimitHeaders = (request.context as any).rateLimitHeaders || {};
+    if (request.response && Object.keys(rateLimitHeaders).length > 0) {
+      request.response.headers = {
+        ...request.response.headers,
+        ...rateLimitHeaders
       };
     }
   }

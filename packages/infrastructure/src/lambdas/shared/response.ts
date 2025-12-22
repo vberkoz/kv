@@ -2,13 +2,14 @@ import { APIResponse } from '@kv/shared';
 import { AppError } from './errors';
 import { logger } from './logger';
 
-export function successResponse(data: any, statusCode = 200, correlationId?: string): APIResponse {
+export function successResponse(data: any, statusCode = 200, correlationId?: string, rateLimitHeaders?: Record<string, string>): APIResponse {
   return {
     statusCode,
     headers: { 
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
-      ...(correlationId && { 'x-correlation-id': correlationId })
+      ...(correlationId && { 'x-correlation-id': correlationId }),
+      ...(rateLimitHeaders || {})
     },
     body: JSON.stringify(data)
   };

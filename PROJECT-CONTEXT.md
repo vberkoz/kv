@@ -2,7 +2,7 @@
 
 **Project Name:** KV Storage  
 **Tagline:** Serverless key-value storage API  
-**Status:** Implementation complete, UI/UX Phase 1 deployed, Error Handling & Logging implemented, Lambda Best Practices implemented, ready for launch
+**Status:** Implementation complete, UI/UX Phase 1 deployed, Error Handling & Logging implemented, Lambda Best Practices implemented, API Rate Limiting implemented, ready for launch
 
 ## Core Value Proposition
 
@@ -140,8 +140,12 @@ packages/infrastructure/
 │   │   │   ├── auth.ts        # JWT verification, API key validation
 │   │   │   ├── dynamodb.ts    # DynamoDB client and helpers
 │   │   │   ├── response.ts    # HTTP response builders
-│   │   │   ├── usage.ts       # Usage tracking utilities
-│   │   │   └── validation.ts  # Zod input validation schemas
+│   │   │   ├── usage.ts       # Monthly quota tracking
+│   │   │   ├── rate-limiter.ts # Per-second rate limiting (token bucket)
+│   │   │   ├── validation.ts  # Zod input validation schemas
+│   │   │   ├── middleware.ts  # Middy middleware
+│   │   │   ├── logger.ts      # Structured logging
+│   │   │   └── errors.ts      # Custom error classes
 │   │   ├── create-namespace.ts
 │   │   ├── delete-value.ts
 │   │   ├── generate-api-key.ts
@@ -180,8 +184,10 @@ packages/infrastructure/
   - `errors.ts` - Custom error classes
   - `auth.ts` - Authentication and authorization
   - `response.ts` - HTTP response builders
-  - `usage.ts` - Usage tracking and rate limiting
+  - `usage.ts` - Monthly quota tracking
+  - `rate-limiter.ts` - Per-second rate limiting (token bucket)
   - `validation.ts` - Input validation with Zod
+  - `middleware.ts` - Middy middleware
   - `dynamodb.ts` - DynamoDB client and helpers
 
 ### Package: @kv/landing
@@ -355,12 +361,13 @@ packages/dashboard/
 
 **middleware.ts** - Middy Middleware Pattern
 - `loggingMiddleware()` - Automatic request/response logging with correlation IDs
-- `apiKeyAuthMiddleware()` - API key validation and user context injection
-- `errorHandlerMiddleware()` - Centralized error handling and response formatting
+- `apiKeyAuthMiddleware()` - API key validation and user context injection with rate limit headers
+- `errorHandlerMiddleware()` - Centralized error handling and response formatting with rate limit headers
 - `createHandler(handler)` - Wrap handler with standard middleware (logging, error handling)
 - `createApiKeyHandler(handler)` - Wrap handler with auth + standard middleware
 - Reduces code duplication across Lambda functions
 - Automatic JSON body parsing with @middy/http-json-body-parser
+- Rate limit headers automatically added to all responses
 
 **logger.ts** - Structured Logging with Correlation IDs
 - `logger` - AWS Lambda Powertools Logger instance with service name and environment
@@ -383,10 +390,12 @@ packages/dashboard/
 
 **auth.ts** - Authentication & Authorization
 - `validateToken(token: string)` - Verify JWT from Cognito with structured logging
-- `validateApiKey(apiKey: string)` - Verify x-api-key header, fetch user profile for email/plan
-- Returns `AuthenticatedUser` with userId, plan, apiKey
+- `validateApiKey(apiKey: string)` - Verify x-api-key header, check per-second rate limits, fetch user profile
+- Returns `AuthenticatedUser` with userId, plan, apiKey, and rateLimitHeaders
 - Throws custom error classes (UnauthorizedError, RateLimitError) instead of generic Error
 - All authentication attempts logged with userId and outcome
+- Per-second rate limiting enforced before monthly quota check
+- Rate limit headers included in response for client-side throttling
 
 **dynamodb.ts** - Database Client & Helpers
 - `docClient` - DynamoDB DocumentClient instance (initialized outside handler for connection reuse)
@@ -396,19 +405,28 @@ packages/dashboard/
 - Client reused across Lambda invocations for better performance
 
 **response.ts** - HTTP Response Builders
-- `successResponse(data, statusCode, correlationId)` - Success response with correlation ID in headers
+- `successResponse(data, statusCode, correlationId, rateLimitHeaders)` - Success response with correlation ID and rate limit headers
 - `errorResponse(error, statusCode, correlationId)` - Error response with structured error details
 - Supports both string messages and AppError instances
 - Automatically logs errors with context
 - Includes correlation ID in response headers for request tracing
+- Includes rate limit headers (X-RateLimit-*) in all responses
 - Handles CORS headers automatically
 - Rate limit responses include Retry-After header
 
 **usage.ts** - Usage Tracking & Rate Limiting
-- `checkRateLimit(userId: string, plan: string)` - Check if user within limits
+- `checkRateLimit(userId: string, plan: string)` - Check if user within monthly quota limits
 - `incrementRequestCount(userId: string)` - Increment request counter
 - `getUsageStats(userId: string)` - Get current usage metrics
-- Plan limits enforcement
+- Plan limits enforcement for monthly quotas
+
+**rate-limiter.ts** - Per-Second Rate Limiting
+- `checkRateLimitPerSecond(userId: string, plan: string)` - Token bucket rate limiting per second
+- Returns rate limit headers (X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset)
+- Plan-based limits: Free (10/s), Starter (50/s), Pro (100/s), Scale (500/s), Business (1000/s)
+- Burst allowance: 2x base rate for paid plans
+- In-memory rate limiting using rate-limiter-flexible library
+- Sliding window algorithm for accurate rate limiting
 
 **validation.ts** - Input Validation with Zod
 - `namespaceSchema` - Validates namespace names (lowercase alphanumeric + hyphens, max 50 chars)
@@ -434,14 +452,59 @@ packages/dashboard/
 3. Client sends key in `x-api-key` header
 4. Lambda reads from `event.headers['x-api-key']`
 5. Lambda validates key via GSI lookup and fetches user profile
-6. Rate limiting checked before operation
-7. Request count incremented
+6. Per-second rate limiting checked (token bucket algorithm)
+7. Monthly quota checked
+8. Request count incremented
+9. Rate limit headers added to response
 
 **File Locations:**
 - JWT validation: `/packages/infrastructure/src/lambdas/shared/auth.ts` (validateToken)
 - API key validation: `/packages/infrastructure/src/lambdas/shared/auth.ts` (validateApiKey)
+- Per-second rate limiting: `/packages/infrastructure/src/lambdas/shared/rate-limiter.ts`
+- Monthly quota tracking: `/packages/infrastructure/src/lambdas/shared/usage.ts`
 - Cognito config: `/packages/infrastructure/src/stacks/auth-stack.ts`
 - API Gateway authorizer: `/packages/infrastructure/src/stacks/api-stack.ts`
+
+### Rate Limiting
+
+**Two-Tier Rate Limiting:**
+
+1. **Per-Second Rate Limiting (Token Bucket):**
+   - Implemented using rate-limiter-flexible library
+   - In-memory sliding window algorithm
+   - Plan-based limits:
+     - Free: 10 requests/second (burst: 20)
+     - Starter: 50 requests/second (burst: 100)
+     - Pro: 100 requests/second (burst: 200)
+     - Scale: 500 requests/second (burst: 1000)
+     - Business: 1000 requests/second (burst: 2000)
+   - Returns 429 with Retry-After header when exceeded
+   - Location: `/packages/infrastructure/src/lambdas/shared/rate-limiter.ts`
+
+2. **Monthly Quota Limiting:**
+   - DynamoDB-based usage tracking
+   - Plan-based monthly limits:
+     - Trial: 10K requests/month
+     - Starter: 500K requests/month
+     - Pro: 1M requests/month
+     - Scale: 5M requests/month
+     - Business: 20M requests/month
+   - Usage alerts at 80% threshold
+   - Location: `/packages/infrastructure/src/lambdas/shared/usage.ts`
+
+**Rate Limit Headers:**
+- `X-RateLimit-Limit` - Maximum requests per second for plan
+- `X-RateLimit-Remaining` - Remaining requests in current window
+- `X-RateLimit-Reset` - Unix timestamp when limit resets
+- `Retry-After` - Seconds to wait before retrying (on 429 errors)
+
+**Implementation Flow:**
+1. API key validated in middleware
+2. Per-second rate limit checked first (fast fail)
+3. Monthly quota checked second
+4. Rate limit headers added to context
+5. Headers included in all responses (success and error)
+6. Client can use headers for client-side throttling
 
 ### Error Handling
 
@@ -1734,6 +1797,7 @@ aws cloudfront create-invalidation \
 - `@middy/http-cors` v4.6.0+ - CORS middleware
 - `@middy/validator` v4.6.0+ - Request validation middleware
 - `pino` v8.16.0+ - High-performance JSON logger
+- `rate-limiter-flexible` v3.0.0+ - Token bucket rate limiting
 - `crypto` (built-in) - API key hashing and UUID generation
 - `zod` v3.22.4 - Runtime type validation and input sanitization
 

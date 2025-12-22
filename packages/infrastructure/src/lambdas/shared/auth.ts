@@ -3,6 +3,7 @@ import { docClient, TABLE_NAME, GSI_NAME } from './dynamodb';
 import { AuthenticatedUser } from '@kv/shared';
 import { createHash } from 'crypto';
 import { checkRateLimit, incrementRequestCount } from './usage';
+import { checkRateLimitPerSecond } from './rate-limiter';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import { UnauthorizedError, RateLimitError } from './errors';
 import { logger } from './logger';
@@ -65,7 +66,7 @@ export async function validateToken(token: string): Promise<AuthenticatedUser> {
   }
 }
 
-export async function validateApiKey(apiKey: string): Promise<AuthenticatedUser> {
+export async function validateApiKey(apiKey: string): Promise<AuthenticatedUser & { rateLimitHeaders: Record<string, string> }> {
   const hashedKey = createHash('sha256').update(apiKey).digest('hex');
   
   logger.debug('Validating API key');
@@ -103,9 +104,16 @@ export async function validateApiKey(apiKey: string): Promise<AuthenticatedUser>
   const plan = user?.plan || apiKeyItem.plan || 'free';
   const email = user?.email || '';
   
+  const rateLimitCheck = await checkRateLimitPerSecond(userId, plan);
+  if (!rateLimitCheck.allowed) {
+    const error = new RateLimitError();
+    (error as any).rateLimitHeaders = rateLimitCheck.headers;
+    throw error;
+  }
+  
   const allowed = await checkRateLimit(userId, plan, user?.trialEndsAt);
   if (!allowed) {
-    logger.warn('Rate limit exceeded', { userId, plan });
+    logger.warn('Monthly quota exceeded', { userId, plan });
     throw new RateLimitError();
   }
   
@@ -114,6 +122,7 @@ export async function validateApiKey(apiKey: string): Promise<AuthenticatedUser>
   return {
     userId,
     plan,
-    apiKey
+    apiKey,
+    rateLimitHeaders: rateLimitCheck.headers
   };
 }
