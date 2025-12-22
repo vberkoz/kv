@@ -1,43 +1,34 @@
-import { APIGatewayEvent, APIResponse } from '@kv/shared';
 import { QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient, TABLE_NAME } from './shared/dynamodb';
-import { validateApiKey } from './shared/auth';
-import { successResponse, errorResponse } from './shared/response';
+import { successResponse } from './shared/response';
+import { ValidationError } from './shared/errors';
+import { createApiKeyHandler } from './shared/middleware';
 
-export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
-  try {
-    const apiKey = event.headers['x-api-key'];
-    if (!apiKey) return errorResponse('Missing API key', 401);
+const baseHandler = async (event: any, context: any) => {
+  const { namespace } = event.pathParameters || {};
+  const prefix = event.queryStringParameters?.prefix || '';
 
-    await validateApiKey(apiKey);
-
-    const { namespace } = event.pathParameters || {};
-    const prefix = event.queryStringParameters?.prefix || '';
-
-    if (!namespace) {
-      return errorResponse('Missing namespace', 400);
-    }
-
-    const result = await docClient.send(new QueryCommand({
-      TableName: TABLE_NAME,
-      KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
-      ExpressionAttributeValues: {
-        ':pk': `NS#${namespace}`,
-        ':sk': `KEY#${prefix}`
-      }
-    }));
-
-    const keys = (result.Items || []).map(item => ({
-      key: item.SK.replace('KEY#', ''),
-      createdAt: item.createdAt,
-      updatedAt: item.updatedAt
-    }));
-
-    return successResponse({ keys });
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return errorResponse('Invalid API key', 401);
-    }
-    return errorResponse('Internal server error', 500);
+  if (!namespace) {
+    throw new ValidationError('Missing namespace');
   }
-}
+
+  const result = await docClient.send(new QueryCommand({
+    TableName: TABLE_NAME,
+    KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
+    ExpressionAttributeValues: {
+      ':pk': `NS#${namespace}`,
+      ':sk': `KEY#${prefix}`
+    }
+  }));
+
+  const keys = (result.Items || []).map(item => ({
+    key: item.SK.replace('KEY#', ''),
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt
+  }));
+
+  const correlationId = event.headers['x-correlation-id'];
+  return successResponse({ keys }, 200, correlationId);
+};
+
+export const handler = createApiKeyHandler(baseHandler);

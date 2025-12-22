@@ -1,43 +1,30 @@
-import { APIGatewayEvent, APIResponse } from '@kv/shared';
 import { GetCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient, TABLE_NAME } from './shared/dynamodb';
-import { validateApiKey } from './shared/auth';
-import { successResponse, errorResponse, rateLimitResponse } from './shared/response';
+import { successResponse } from './shared/response';
+import { ValidationError, NotFoundError } from './shared/errors';
+import { createApiKeyHandler } from './shared/middleware';
 
-export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
-  try {
-    const apiKey = event.headers['x-api-key'];
-    if (!apiKey) {
-      return errorResponse('Missing API key', 401);
-    }
-
-    await validateApiKey(apiKey);
-
-    const { namespace, key } = event.pathParameters || {};
-    if (!namespace || !key) {
-      return errorResponse('Missing namespace or key', 400);
-    }
-
-    const result = await docClient.send(new GetCommand({
-      TableName: TABLE_NAME,
-      Key: {
-        PK: `NS#${namespace}`,
-        SK: `KEY#${key}`
-      }
-    }));
-
-    if (!result.Item) {
-      return errorResponse('Key not found', 404);
-    }
-
-    return successResponse({ value: result.Item.value });
-  } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return errorResponse('Invalid API key', 401);
-    }
-    if (error.message === 'RateLimitExceeded') {
-      return rateLimitResponse();
-    }
-    return errorResponse('Internal server error', 500);
+const baseHandler = async (event: any, context: any) => {
+  const { namespace, key } = event.pathParameters || {};
+  
+  if (!namespace || !key) {
+    throw new ValidationError('Missing namespace or key');
   }
-}
+
+  const result = await docClient.send(new GetCommand({
+    TableName: TABLE_NAME,
+    Key: {
+      PK: `NS#${namespace}`,
+      SK: `KEY#${key}`
+    }
+  }));
+
+  if (!result.Item) {
+    throw new NotFoundError('Key not found');
+  }
+
+  const correlationId = event.headers['x-correlation-id'];
+  return successResponse({ value: result.Item.value }, 200, correlationId);
+};
+
+export const handler = createApiKeyHandler(baseHandler);

@@ -4,6 +4,8 @@ import { AuthenticatedUser } from '@kv/shared';
 import { createHash } from 'crypto';
 import { checkRateLimit, incrementRequestCount } from './usage';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
+import { UnauthorizedError, RateLimitError } from './errors';
+import { logger } from './logger';
 
 const verifier = CognitoJwtVerifier.create({
   userPoolId: process.env.USER_POOL_ID!,
@@ -13,10 +15,11 @@ const verifier = CognitoJwtVerifier.create({
 
 export async function validateToken(token: string): Promise<AuthenticatedUser> {
   try {
-    console.log('Validating token:', token.substring(0, 50) + '...');
+    logger.debug('Validating JWT token');
     const payload = await verifier.verify(token);
-    console.log('JWT payload:', JSON.stringify(payload, null, 2));
     const userId = payload.sub;
+    
+    logger.debug('JWT validated', { userId });
     
     const result = await docClient.send(new QueryCommand({
       TableName: TABLE_NAME,
@@ -28,6 +31,7 @@ export async function validateToken(token: string): Promise<AuthenticatedUser> {
     }));
 
     if (!result.Items || result.Items.length === 0) {
+      logger.info('Creating new user profile', { userId });
       const now = new Date().toISOString();
       await docClient.send(new PutCommand({
         TableName: TABLE_NAME,
@@ -56,12 +60,15 @@ export async function validateToken(token: string): Promise<AuthenticatedUser> {
       apiKey: ''
     };
   } catch (error) {
-    throw new Error('Unauthorized');
+    logger.error('JWT validation failed', { error });
+    throw new UnauthorizedError('Invalid or expired token');
   }
 }
 
 export async function validateApiKey(apiKey: string): Promise<AuthenticatedUser> {
   const hashedKey = createHash('sha256').update(apiKey).digest('hex');
+  
+  logger.debug('Validating API key');
   
   const result = await docClient.send(new QueryCommand({
     TableName: TABLE_NAME,
@@ -74,17 +81,20 @@ export async function validateApiKey(apiKey: string): Promise<AuthenticatedUser>
   }));
 
   if (!result.Items || result.Items.length === 0) {
-    throw new Error('Unauthorized');
+    logger.warn('Invalid API key attempt');
+    throw new UnauthorizedError('Invalid API key');
   }
 
   const apiKeyItem = result.Items[0];
+  const userId = apiKeyItem.userId;
   
-  // Get user profile for email
+  logger.debug('API key validated', { userId });
+  
   const userResult = await docClient.send(new QueryCommand({
     TableName: TABLE_NAME,
     KeyConditionExpression: 'PK = :pk AND SK = :sk',
     ExpressionAttributeValues: {
-      ':pk': `USER#${apiKeyItem.userId}`,
+      ':pk': `USER#${userId}`,
       ':sk': 'PROFILE'
     }
   }));
@@ -93,15 +103,16 @@ export async function validateApiKey(apiKey: string): Promise<AuthenticatedUser>
   const plan = user?.plan || apiKeyItem.plan || 'free';
   const email = user?.email || '';
   
-  const allowed = await checkRateLimit(apiKeyItem.userId, plan, user?.trialEndsAt);
+  const allowed = await checkRateLimit(userId, plan, user?.trialEndsAt);
   if (!allowed) {
-    throw new Error('RateLimitExceeded');
+    logger.warn('Rate limit exceeded', { userId, plan });
+    throw new RateLimitError();
   }
   
-  await incrementRequestCount(apiKeyItem.userId, email, plan);
+  await incrementRequestCount(userId, email, plan);
   
   return {
-    userId: apiKeyItem.userId,
+    userId,
     plan,
     apiKey
   };

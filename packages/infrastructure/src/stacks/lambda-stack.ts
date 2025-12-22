@@ -43,6 +43,11 @@ export class LambdaStack extends Stack {
 
     const bundling = { externalModules: ['@aws-sdk/*'] };
 
+    // Lambda warming for critical functions
+    const warmingRule = new Rule(this, 'WarmingRule', {
+      schedule: Schedule.rate(Duration.minutes(5))
+    });
+
     this.getValue = new NodejsFunction(this, 'GetValueFunction', {
       entry: 'src/lambdas/get-value.ts',
       handler: 'handler',
@@ -193,5 +198,10 @@ export class LambdaStack extends Stack {
       schedule: Schedule.cron({ day: '1', hour: '0', minute: '0' })
     });
     resetRule.addTarget(new LambdaFunction(this.resetUsage));
+
+    // Warm critical KV operation functions
+    warmingRule.addTarget(new LambdaFunction(this.getValue));
+    warmingRule.addTarget(new LambdaFunction(this.putValue));
+    warmingRule.addTarget(new LambdaFunction(this.listKeys));
   }
 }

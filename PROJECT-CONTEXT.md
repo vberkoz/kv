@@ -2,7 +2,7 @@
 
 **Project Name:** KV Storage  
 **Tagline:** Serverless key-value storage API  
-**Status:** Implementation complete, UI/UX Phase 1 improvements deployed, ready for launch
+**Status:** Implementation complete, UI/UX Phase 1 improvements deployed, Error Handling & Logging implemented, ready for launch
 
 ## Core Value Proposition
 
@@ -176,6 +176,13 @@ packages/infrastructure/
 - `/packages/infrastructure/src/stacks/` - All infrastructure stacks
 - `/packages/infrastructure/src/lambdas/` - All Lambda handlers
 - `/packages/infrastructure/src/lambdas/shared/` - Shared Lambda utilities
+  - `logger.ts` - Structured logging with correlation IDs
+  - `errors.ts` - Custom error classes
+  - `auth.ts` - Authentication and authorization
+  - `response.ts` - HTTP response builders
+  - `usage.ts` - Usage tracking and rate limiting
+  - `validation.ts` - Input validation with Zod
+  - `dynamodb.ts` - DynamoDB client and helpers
 
 ### Package: @kv/landing
 **Purpose:** Astro-based landing page, documentation, and pricing pages
@@ -346,10 +353,31 @@ packages/dashboard/
 
 **Location:** `/packages/infrastructure/src/lambdas/shared/`
 
+**logger.ts** - Structured Logging with Correlation IDs
+- `logger` - AWS Lambda Powertools Logger instance with service name and environment
+- `generateCorrelationId()` - Generate unique UUID for request tracking
+- `addCorrelationId(event)` - Extract or generate correlation ID from request headers
+- `logRequest(operation, metadata)` - Log incoming request with operation and metadata
+- `logResponse(operation, statusCode, metadata)` - Log outgoing response with status
+- Correlation IDs automatically added to all log entries and response headers
+- Structured JSON logs for CloudWatch Logs Insights queries
+
+**errors.ts** - Custom Error Classes
+- `AppError` - Base error class with statusCode, code, and metadata
+- `ValidationError` - 400 errors for invalid input
+- `UnauthorizedError` - 401 errors for authentication failures
+- `ForbiddenError` - 403 errors for authorization failures
+- `NotFoundError` - 404 errors for missing resources
+- `RateLimitError` - 429 errors for rate limit exceeded
+- `InternalError` - 500 errors for unexpected failures
+- All errors include optional metadata for debugging
+
 **auth.ts** - Authentication & Authorization
-- `validateToken(token: string)` - Verify JWT from Cognito
+- `validateToken(token: string)` - Verify JWT from Cognito with structured logging
 - `validateApiKey(apiKey: string)` - Verify x-api-key header, fetch user profile for email/plan
 - Returns `AuthenticatedUser` with userId, plan, apiKey
+- Throws custom error classes (UnauthorizedError, RateLimitError) instead of generic Error
+- All authentication attempts logged with userId and outcome
 
 **dynamodb.ts** - Database Client & Helpers
 - `docClient` - DynamoDB DocumentClient instance
@@ -358,9 +386,13 @@ packages/dashboard/
 - Helper functions for common queries
 
 **response.ts** - HTTP Response Builders
-- `success(data: any, statusCode?: number)` - Success response
-- `error(message: string, statusCode?: number)` - Error response
+- `successResponse(data, statusCode, correlationId)` - Success response with correlation ID in headers
+- `errorResponse(error, statusCode, correlationId)` - Error response with structured error details
+- Supports both string messages and AppError instances
+- Automatically logs errors with context
+- Includes correlation ID in response headers for request tracing
 - Handles CORS headers automatically
+- Rate limit responses include Retry-After header
 
 **usage.ts** - Usage Tracking & Rate Limiting
 - `checkRateLimit(userId: string, plan: string)` - Check if user within limits
@@ -403,19 +435,82 @@ packages/dashboard/
 
 ### Error Handling
 
+**Custom Error Classes:**
+- All Lambda functions use custom error classes from `/packages/infrastructure/src/lambdas/shared/errors.ts`
+- Errors include statusCode, error code, message, and optional metadata
+- Consistent error responses across all endpoints
+
 **Standard Error Responses:**
 ```typescript
 {
   statusCode: 400 | 401 | 403 | 404 | 429 | 500,
-  body: JSON.stringify({ error: "Error message" })
+  body: JSON.stringify({ 
+    error: "Error message",
+    statusCode: number,
+    code: "ERROR_CODE",
+    correlationId: "uuid"
+  })
 }
 ```
 
 **Error Types:**
-- `400` Bad Request | `401` Unauthorized | `403` Forbidden
-- `404` Not Found | `429` Rate Limit Exceeded | `500` Internal Server Error
+- `400` Bad Request (ValidationError) - Invalid input, missing required fields
+- `401` Unauthorized (UnauthorizedError) - Invalid/expired token or API key
+- `403` Forbidden (ForbiddenError) - Insufficient permissions
+- `404` Not Found (NotFoundError) - Resource doesn't exist
+- `429` Rate Limit Exceeded (RateLimitError) - Usage quota exceeded
+- `500` Internal Server Error (InternalError) - Unexpected failures
 
-**File Location:** `/packages/infrastructure/src/lambdas/shared/response.ts`
+**Error Handling Pattern:**
+```typescript
+try {
+  // Operation logic
+} catch (error) {
+  if (error instanceof AppError) {
+    return errorResponse(error, error.statusCode, correlationId);
+  }
+  logger.error('Unexpected error', { error });
+  return errorResponse('Internal server error', 500, correlationId);
+}
+```
+
+**File Location:** `/packages/infrastructure/src/lambdas/shared/errors.ts`, `/packages/infrastructure/src/lambdas/shared/response.ts`
+
+### Logging & Monitoring
+
+**Structured Logging:**
+- AWS Lambda Powertools Logger for structured JSON logs
+- Service name: `kv-storage`
+- Log level: INFO (configurable via LOG_LEVEL env var)
+- All logs include: timestamp, level, message, correlationId, environment
+
+**Correlation IDs:**
+- Unique UUID generated for each request
+- Extracted from `x-correlation-id` header if provided
+- Added to all log entries via logger context
+- Returned in response headers for client-side tracing
+- Enables end-to-end request tracking across services
+
+**Request/Response Logging:**
+- All Lambda handlers log incoming requests with operation, userId, namespace, key
+- All responses logged with statusCode and relevant metadata
+- Errors logged with full context and stack traces
+- Authentication attempts logged with outcome
+
+**Log Queries:**
+CloudWatch Logs Insights queries enabled by structured logging:
+```
+fields @timestamp, correlationId, operation, userId, statusCode
+| filter operation = "GET_VALUE"
+| sort @timestamp desc
+```
+
+**File Locations:**
+- Logger setup: `/packages/infrastructure/src/lambdas/shared/logger.ts`
+- Error classes: `/packages/infrastructure/src/lambdas/shared/errors.ts`
+- Response builders: `/packages/infrastructure/src/lambdas/shared/response.ts`
+- Lambda handlers: `/packages/infrastructure/src/lambdas/*.ts`
+
 
 ### Middleware & Utilities
 
@@ -1621,7 +1716,10 @@ aws cloudfront create-invalidation \
 - `@aws-sdk/client-dynamodb` - DynamoDB client
 - `@aws-sdk/lib-dynamodb` - DynamoDB document client
 - `aws-jwt-verify` - Cognito JWT verification
-- `crypto` (built-in) - API key hashing
+- `@aws-lambda-powertools/logger` v1.14.0+ - Structured logging with correlation IDs
+- `@aws-lambda-powertools/tracer` v1.14.0+ - X-Ray tracing integration
+- `pino` v8.16.0+ - High-performance JSON logger
+- `crypto` (built-in) - API key hashing and UUID generation
 - `zod` v3.22.4 - Runtime type validation and input sanitization
 
 **Infrastructure (CDK):**
