@@ -1,18 +1,22 @@
 import { useState } from 'react';
 import { useApiKey } from '../hooks/useApi';
+import { Toast } from './ui/Toast';
 
 export function ApiKeyDisplay() {
   const [copied, setCopied] = useState(false);
+  const [showToast, setShowToast] = useState(false);
   const { data, isLoading } = useApiKey();
   const apiKey = data?.apiKey || '';
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(apiKey);
     setCopied(true);
+    setShowToast(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   return (
+    <>
     <div className="bg-white p-4 md:p-6 rounded-lg shadow hover:shadow-md transition-shadow">
       <div className="flex items-center gap-2 mb-4">
         <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -26,13 +30,13 @@ export function ApiKeyDisplay() {
             type="text"
             value={isLoading ? 'Loading...' : apiKey}
             readOnly
-            className={`w-full p-2 md:p-3 border rounded bg-gray-50 font-mono text-xs md:text-sm overflow-x-auto transition-colors ${
-              copied ? 'border-green-500 bg-green-50' : 'border-gray-300'
+            className={`w-full p-2 md:p-3 border rounded font-mono text-xs md:text-sm overflow-x-auto transition-all duration-300 ${
+              copied ? 'border-green-500 bg-green-50 shadow-sm' : 'border-gray-300 bg-gray-50'
             }`}
           />
           {copied && (
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 text-green-600">
-              <svg className="w-5 h-5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 text-green-600 animate-scale-in">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
               </svg>
             </div>
@@ -41,9 +45,9 @@ export function ApiKeyDisplay() {
         <button
           onClick={copyToClipboard}
           disabled={isLoading || !apiKey}
-          className={`px-4 py-2 rounded whitespace-nowrap disabled:opacity-50 transition-all flex items-center gap-2 ${
+          className={`px-4 py-2 rounded whitespace-nowrap disabled:opacity-50 transition-all duration-300 flex items-center gap-2 ${
             copied 
-              ? 'bg-green-600 hover:bg-green-700 text-white' 
+              ? 'bg-green-600 hover:bg-green-700 text-white scale-105' 
               : 'bg-blue-600 hover:bg-blue-700 text-white'
           }`}
         >
@@ -71,5 +75,7 @@ export function ApiKeyDisplay() {
         <span>Keep this key secret. Use it in the <code className="bg-white px-1 py-0.5 rounded text-blue-600">x-api-key</code> header.</span>
       </div>
     </div>
+    {showToast && <Toast message="API key copied to clipboard!" onClose={() => setShowToast(false)} />}
+    </>
   );
 }
