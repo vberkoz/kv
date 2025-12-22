@@ -647,6 +647,13 @@ lastUpdated: ISO timestamp
 - `/packages/dashboard/tailwind.config.js` - Tailwind CSS configuration
 - `/packages/dashboard/index.html` - HTML entry point
 
+**First-Time User Onboarding:**
+- Detects users with no namespaces on dashboard load
+- Shows modal overlay with 3-step guide
+- Highlights "Create Namespace" as primary action
+- Dismissible with localStorage persistence (key: `kv_onboarding_completed`)
+- Automatically navigates to Namespaces page on CTA click
+
 
 **Routing Structure:**
 - `/` - Redirects to `/dashboard`
@@ -664,7 +671,7 @@ lastUpdated: ISO timestamp
 - `/packages/dashboard/src/pages/LoginPage.tsx` - Email/password login form
 - `/packages/dashboard/src/pages/SignupPage.tsx` - User registration form
 - `/packages/dashboard/src/pages/AuthCallback.tsx` - OAuth redirect handler
-- `/packages/dashboard/src/pages/DashboardPage.tsx` - Main dashboard with usage stats
+- `/packages/dashboard/src/pages/DashboardPage.tsx` - Main dashboard with usage stats and first-time user onboarding
 - `/packages/dashboard/src/pages/NamespacesPage.tsx` - Namespace list with key metrics, activity indicators, and management
 - `/packages/dashboard/src/pages/PricingPage.tsx` - Plan comparison and upgrade
 
@@ -690,6 +697,7 @@ lastUpdated: ISO timestamp
 - Better form validation and loading states
 - Rich empty states with helpful guidance
 - Skeleton loading animations throughout
+- Progressive onboarding for first-time users with step-by-step guide
 
 
 **State Management:**
