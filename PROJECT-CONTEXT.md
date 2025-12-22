@@ -716,6 +716,54 @@ lastUpdated: ISO timestamp
 - All dialogs rendered inline above content
 - No browser dialogs used anywhere in the app
 
+### DashboardLayout - Enhanced Navigation
+
+**Location:** `/packages/dashboard/src/components/layout/DashboardLayout.tsx`
+
+**Navigation Features:**
+
+1. **Active State Highlighting:**
+   - Active page has blue background (bg-blue-600)
+   - White text for active links
+   - Shadow effect for depth (shadow-md)
+   - Inactive links have gray text with hover state
+   - Uses React Router's useLocation to detect active page
+
+2. **Icons with Text Labels:**
+   - Dashboard: Home icon
+   - Namespaces: Folder icon
+   - Pricing: Dollar sign icon
+   - All icons 5x5 size, aligned with text
+   - Icons inherit text color for consistency
+
+3. **Visual Grouping:**
+   - Navigation items in flex-1 section
+   - Logout button separated in border-top footer section
+   - Consistent spacing with py-3 px-4 for nav items
+   - 1px margin between items (mb-1)
+
+4. **Improved Logout Button:**
+   - Full-width button with gray background
+   - Logout icon (arrow-right-from-bracket)
+   - Centered content with gap-2 spacing
+   - Hover state with darker gray (hover:bg-gray-200)
+   - Font-medium for emphasis
+   - Smooth transition on hover
+
+5. **Responsive Design:**
+   - Mobile: Hamburger menu with slide-in sidebar
+   - Desktop: Fixed sidebar (w-64)
+   - Overlay backdrop on mobile when menu open
+   - Auto-close menu on navigation click
+   - Smooth transform transitions (300ms)
+
+**Implementation Details:**
+- `isActive` helper function compares location.pathname
+- `navItems` array with path, label, and icon objects
+- Conditional className based on active state
+- Mobile menu state managed with `menuOpen` boolean
+- Logo with database icon in header section
+
 ### ApiKeyDisplay - Enhanced Copy Feedback
 
 **Location:** `/packages/dashboard/src/components/ApiKeyDisplay.tsx`
