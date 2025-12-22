@@ -98,7 +98,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Overlay */}
-      {menuOpen && <div onClick={() => setMenuOpen(false)} className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-10"></div>}
+      {menuOpen && <div onClick={() => setMenuOpen(false)} className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-10 animate-fade-in cursor-pointer"></div>}
 
       {/* Main Content */}
       <div className="flex-1 ml-0 md:ml-64 mt-16 md:mt-0">
