@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import { useNamespaces, useCreateNamespace, useApiKey } from '../hooks/useApi';
 import NamespaceDetails from '../components/NamespaceDetails';
@@ -6,11 +6,36 @@ import NamespaceDetails from '../components/NamespaceDetails';
 export default function NamespacesPage() {
   const [newName, setNewName] = useState('');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [keyCounts, setKeyCounts] = useState<Record<string, number>>({});
   const { data, isLoading } = useNamespaces();
   const { data: apiKeyData } = useApiKey();
   const createMutation = useCreateNamespace();
   const namespaces = data?.namespaces || [];
   const apiKey = apiKeyData?.apiKey || '';
+
+  useEffect(() => {
+    if (!apiKey || namespaces.length === 0) return;
+    
+    const fetchKeyCounts = async () => {
+      const counts: Record<string, number> = {};
+      await Promise.all(
+        namespaces.map(async (ns: { name: string }) => {
+          try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/v1/${ns.name}`, {
+              headers: { 'x-api-key': apiKey }
+            });
+            const data = await res.json();
+            counts[ns.name] = data.keys?.length || 0;
+          } catch {
+            counts[ns.name] = 0;
+          }
+        })
+      );
+      setKeyCounts(counts);
+    };
+    
+    fetchKeyCounts();
+  }, [apiKey, namespaces.length]);
 
   const createNamespace = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,42 +129,58 @@ export default function NamespacesPage() {
               </div>
             </div>
           ) : (
-            namespaces.map((ns: { name: string; createdAt: string }) => (
-              <div key={ns.name} className="border-b last:border-b-0">
-                <div
-                  className="p-4 cursor-pointer hover:bg-gray-50 transition-colors flex justify-between items-center border-l-4 border-transparent hover:border-blue-500"
-                  onClick={() => toggleExpanded(ns.name)}
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-1">
-                      <div className="font-semibold text-lg">{ns.name}</div>
-                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                        Active
-                      </span>
+            namespaces.map((ns: { name: string; createdAt: string }) => {
+              const keyCount = keyCounts[ns.name] ?? 0;
+              const isActive = keyCount > 0;
+              const daysSinceCreation = Math.floor((Date.now() - new Date(ns.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+              
+              return (
+                <div key={ns.name} className="border-b last:border-b-0">
+                  <div
+                    className="p-4 cursor-pointer hover:bg-gray-50 transition-colors flex justify-between items-center border-l-4 border-transparent hover:border-blue-500"
+                    onClick={() => toggleExpanded(ns.name)}
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="font-semibold text-lg">{ns.name}</div>
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          isActive 
+                            ? 'bg-green-100 text-green-700' 
+                            : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {isActive ? 'Active' : 'Empty'}
+                        </span>
+                        <span className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full flex items-center gap-1">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                          </svg>
+                          {keyCount} {keyCount === 1 ? 'key' : 'keys'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <span className="flex items-center gap-1">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Created {daysSinceCreation === 0 ? 'today' : `${daysSinceCreation} ${daysSinceCreation === 1 ? 'day' : 'days'} ago`}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <span className="flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Created: {new Date(ns.createdAt).toLocaleDateString()}
-                      </span>
+                    <div className="flex items-center gap-4">
+                      <svg
+                        className={`w-5 h-5 transition-transform duration-200 text-gray-400 ${expanded[ns.name] ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                      </svg>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <svg
-                      className={`w-5 h-5 transition-transform duration-200 text-gray-400 ${expanded[ns.name] ? 'rotate-180' : ''}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                  </div>
+                  {expanded[ns.name] && <NamespaceDetails namespace={ns.name} apiKey={apiKey} />}
                 </div>
-                {expanded[ns.name] && <NamespaceDetails namespace={ns.name} apiKey={apiKey} />}
-              </div>
-            ))
+              );
+            })
           )}
         </div>
     </DashboardLayout>

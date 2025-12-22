@@ -598,6 +598,42 @@ lastUpdated: ISO timestamp
 - `/packages/landing/src/layouts/Layout.astro` - Base layout with header, footer, meta tags
 
 
+### NamespacesPage - Enhanced Collapsed State
+
+**Location:** `/packages/dashboard/src/pages/NamespacesPage.tsx`
+
+**Collapsed Namespace Card Features:**
+
+1. **Key Count Badge:**
+   - Displays total number of keys in namespace
+   - Blue badge with key icon
+   - Updates automatically when namespaces are loaded
+   - Shows "X key" (singular) or "X keys" (plural)
+
+2. **Activity Status Indicator:**
+   - Green "Active" badge for namespaces with keys (keyCount > 0)
+   - Gray "Empty" badge for namespaces without keys
+   - Visual differentiation helps identify used vs unused namespaces
+
+3. **Last Activity Timestamp:**
+   - Shows "Created today" for namespaces created within 24 hours
+   - Shows "Created X day(s) ago" for older namespaces
+   - Calculated from createdAt timestamp
+   - Provides quick context on namespace age
+
+4. **Visual Hierarchy:**
+   - Namespace name in bold
+   - Status and key count badges inline
+   - Creation time below with clock icon
+   - Hover effect with left border highlight
+
+**Implementation Details:**
+- Key counts fetched via useEffect when apiKey and namespaces are available
+- Parallel API calls to list keys for each namespace
+- Cached in keyCounts state object
+- Graceful fallback to 0 if fetch fails
+- No loading spinner to avoid UI flicker
+
 ### Dashboard (React)
 
 **Purpose:** User management interface  
@@ -629,7 +665,7 @@ lastUpdated: ISO timestamp
 - `/packages/dashboard/src/pages/SignupPage.tsx` - User registration form
 - `/packages/dashboard/src/pages/AuthCallback.tsx` - OAuth redirect handler
 - `/packages/dashboard/src/pages/DashboardPage.tsx` - Main dashboard with usage stats
-- `/packages/dashboard/src/pages/NamespacesPage.tsx` - Namespace list and management
+- `/packages/dashboard/src/pages/NamespacesPage.tsx` - Namespace list with key metrics, activity indicators, and management
 - `/packages/dashboard/src/pages/PricingPage.tsx` - Plan comparison and upgrade
 
 
@@ -649,7 +685,8 @@ lastUpdated: ISO timestamp
 - Color-coded usage status (blue/yellow/red based on thresholds)
 - Enhanced copy feedback with animations and visual states
 - Navigation with icons and active state highlighting
-- Improved namespace cards with status badges
+- Improved namespace cards with status badges and key metrics
+- Enhanced collapsed namespace state with key count badges and activity indicators
 - Better form validation and loading states
 - Rich empty states with helpful guidance
 - Skeleton loading animations throughout
