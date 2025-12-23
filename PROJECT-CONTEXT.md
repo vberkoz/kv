@@ -2,7 +2,7 @@
 
 **Project Name:** KV Storage  
 **Tagline:** Serverless key-value storage API  
-**Status:** Implementation complete, UI/UX Phase 1 deployed, Error Handling & Logging implemented, Lambda Best Practices implemented, API Rate Limiting implemented, State Management implemented, UI Component Library implemented, Error Boundaries implemented, ready for launch
+**Status:** Implementation complete, UI/UX Phase 1 deployed, Error Handling & Logging implemented, Lambda Best Practices implemented, API Rate Limiting implemented, State Management implemented, UI Component Library implemented, Error Boundaries implemented, Code Splitting & Lazy Loading implemented, Accessibility (a11y) implemented, Unit Testing implemented, Code Quality Tools implemented, Load Testing Improvements implemented, API Key Security implemented, ready for launch
 
 ## Core Value Proposition
 
@@ -78,6 +78,8 @@ Simple REST API for storing and retrieving JSON data without managing infrastruc
 - **Monorepo:** 5 packages
 - **Version Control:** Git + GitHub
 - **Deployment:** Manual via CDK CLI
+- **Code Quality:** ESLint + Prettier + Husky
+- **CI/CD:** GitHub Actions
 
 ## Monorepo Structure
 
@@ -131,6 +133,22 @@ kv-storage/
 
 ### Package: @kv/infrastructure
 **Purpose:** AWS CDK infrastructure code and Lambda function handlers
+
+**Configuration:**
+- `/packages/infrastructure/vitest.config.ts` - Vitest test configuration
+
+**Unit Testing:**
+- **Framework:** Vitest for Node.js environment
+- **Coverage:** v8 provider with text, JSON, and HTML reports
+- **Test Files:** `/packages/infrastructure/src/test/`
+  - `validation.test.ts` - Input validation tests
+  - `response.test.ts` - Response utility tests
+  - `errors.test.ts` - Error class tests
+- **Commands:**
+  - `npm test` - Run tests in watch mode
+  - `npm run test:coverage` - Generate coverage report
+- **Coverage Exclusions:** CDK stacks, app.ts, test files
+- **Focus:** Lambda utilities and shared functions
 
 ```
 packages/infrastructure/
@@ -302,11 +320,39 @@ packages/dashboard/
 - `.env` / `.env.example` - Environment variables
 - `package.json` - Workspace configuration and scripts
 - `tsconfig.json` - Root TypeScript configuration
-- `artillery.yml` - Load testing configuration
+- `artillery.yml` - Main load testing configuration
+- `artillery-rate-limit.yml` - Rate limiting test scenarios
+- `artillery-concurrent.yml` - Concurrent operations test
+- `artillery-tiers.yml` - Subscription tier simulation
+- `artillery-processor.js` - Custom Artillery functions
+- `.eslintrc.json` - Root ESLint configuration
+- `.prettierrc.json` - Prettier formatting configuration
+- `.prettierignore` - Prettier ignore patterns
+- `.lintstagedrc.json` - Lint-staged configuration for pre-commit
+- `.husky/pre-commit` - Git pre-commit hook
+- `.github/workflows/ci.yml` - GitHub Actions CI workflow
+- `.vscode/settings.json` - VS Code editor settings
+- `.vscode/extensions.json` - Recommended VS Code extensions
 - `README.md`, `DEPLOYMENT.md`, `LAUNCH-CHECKLIST.md` - Documentation
 - `UI-UX-IMPROVEMENTS.md` - Complete UI/UX roadmap (16 steps)
 - `UI-UX-IMPLEMENTATION-LOG.md` - Detailed change log
 - `UI-UX-QUICK-REFERENCE.md` - Quick summary
+
+**Code Quality Tools:**
+- **ESLint:** TypeScript linting with recommended rules
+- **Prettier:** Code formatting with consistent style
+- **Husky:** Git hooks for pre-commit checks
+- **Lint-staged:** Run linters on staged files only
+- **CI/CD:** GitHub Actions workflow for automated checks
+- **Configuration:**
+  - ESLint extends to all packages
+  - Prettier formats .ts, .tsx, .js, .jsx, .json, .md files
+  - Pre-commit hook runs lint-staged automatically
+  - CI runs lint, format check, type check, and tests
+- **Commands:**
+  - `npm run lint` - Lint all packages
+  - `npm run format` - Format all files
+  - `npm run format:check` - Check formatting without changes
 
 ---
 
@@ -323,8 +369,10 @@ packages/dashboard/
 - `GET /v1/namespaces` → `/packages/infrastructure/src/lambdas/list-namespaces.ts`
 
 **API Key Management (JWT Required):**
-- `POST /v1/api-keys` → `/packages/infrastructure/src/lambdas/generate-api-key.ts`
-- `GET /v1/api-keys` → `/packages/infrastructure/src/lambdas/get-api-key.ts`
+- `POST /v1/api-keys` → `/packages/infrastructure/src/lambdas/create-api-key.ts`
+- `GET /v1/api-keys` → `/packages/infrastructure/src/lambdas/list-api-keys.ts`
+- `DELETE /v1/api-keys/{apiKeyId}` → `/packages/infrastructure/src/lambdas/revoke-api-key.ts`
+- `POST /v1/api-keys/{apiKeyId}/rotate` → `/packages/infrastructure/src/lambdas/rotate-api-key.ts`
 
 **Usage & Billing (JWT Required):**
 - `GET /v1/usage` → `/packages/infrastructure/src/lambdas/get-usage.ts`
@@ -351,8 +399,10 @@ packages/dashboard/
 - `list-namespaces.ts` - List all namespaces for user
 
 **API Key Operations:**
-- `generate-api-key.ts` - Generate new API key for namespace
-- `get-api-key.ts` - Retrieve API keys for user
+- `create-api-key.ts` - Create new API key with permissions and expiration
+- `list-api-keys.ts` - List all API keys for user
+- `revoke-api-key.ts` - Revoke/delete an API key
+- `rotate-api-key.ts` - Rotate API key (generate new key, keep metadata)
 
 **KV Operations:**
 - `get-value.ts` - Retrieve value by key
@@ -460,23 +510,36 @@ packages/dashboard/
 6. Lambda receives verified user claims
 
 **API Key Authentication (KV Operations):**
-1. User generates API key in dashboard
-2. API key hashed (SHA-256) and stored in DynamoDB
+1. User creates API key in dashboard with permissions and optional expiration
+2. API key hashed (SHA-256) and stored in DynamoDB with metadata
 3. Client sends key in `x-api-key` header
-4. Lambda reads from `event.headers['x-api-key']`
-5. Lambda validates key via GSI lookup and fetches user profile
-6. Per-second rate limiting checked (token bucket algorithm)
-7. Monthly quota checked
-8. Request count incremented
-9. Rate limit headers added to response
+4. Lambda validates key via GSI lookup
+5. Check if key is expired (expiresAt < now)
+6. Check permissions for operation (read/write/delete)
+7. Update lastUsedAt timestamp
+8. Per-second rate limiting checked (token bucket algorithm)
+9. Monthly quota checked
+10. Request count incremented
+11. Rate limit headers added to response
 
 **File Locations:**
 - JWT validation: `/packages/infrastructure/src/lambdas/shared/auth.ts` (validateToken)
-- API key validation: `/packages/infrastructure/src/lambdas/shared/auth.ts` (validateApiKey)
+- API key validation: `/packages/infrastructure/src/lambdas/shared/auth.ts` (validateApiKey with expiration check)
+- Permission checking: `/packages/infrastructure/src/lambdas/shared/permissions.ts`
 - Per-second rate limiting: `/packages/infrastructure/src/lambdas/shared/rate-limiter.ts`
 - Monthly quota tracking: `/packages/infrastructure/src/lambdas/shared/usage.ts`
 - Cognito config: `/packages/infrastructure/src/stacks/auth-stack.ts`
 - API Gateway authorizer: `/packages/infrastructure/src/stacks/api-stack.ts`
+
+**API Key Security Features:**
+- **Multiple Keys:** Users can create multiple API keys per account
+- **Named Keys:** Each key has a descriptive name for identification
+- **Permissions:** Granular read/write/delete permissions per key
+- **Expiration:** Optional expiration date (expiresInDays parameter)
+- **Rotation:** Rotate keys without changing metadata or permissions
+- **Revocation:** Instantly revoke compromised keys
+- **Last Used:** Track when each key was last used
+- **SHA-256 Hashing:** Keys hashed before storage
 
 ### Rate Limiting
 
@@ -660,10 +723,11 @@ GSI1SK: METADATA
 entityType: APIKEY
 userId: string
 apiKeyId: string
+name: string
 hashedKey: string (SHA-256)
-namespaceId: string
-plan: string
-email: string
+permissions: ['read', 'write', 'delete']
+expiresAt: ISO timestamp (optional)
+lastUsedAt: ISO timestamp
 createdAt: ISO timestamp
 ```
 
@@ -1005,9 +1069,58 @@ lastUpdated: ISO timestamp
 **Deployment:** S3 + CloudFront
 
 **Configuration:**
-- `/packages/dashboard/vite.config.ts` - Vite build configuration
+- `/packages/dashboard/vite.config.ts` - Vite build configuration with code splitting
+- `/packages/dashboard/vitest.config.ts` - Vitest test configuration
 - `/packages/dashboard/tailwind.config.js` - Tailwind CSS configuration
 - `/packages/dashboard/index.html` - HTML entry point
+- `/packages/dashboard/.eslintrc.json` - ESLint config with jsx-a11y plugin
+
+**Unit Testing:**
+- **Framework:** Vitest with React Testing Library
+- **Coverage:** v8 provider with text, JSON, and HTML reports
+- **Test Files:** `/packages/dashboard/src/test/`
+  - `Button.test.tsx` - UI component tests
+  - `utils.test.ts` - Utility function tests
+  - `setup.ts` - Test environment setup
+- **Commands:**
+  - `npm test` - Run tests in watch mode
+  - `npm run test:ui` - Run tests with UI
+  - `npm run test:coverage` - Generate coverage report
+- **Environment:** jsdom for DOM simulation
+- **Features:**
+  - User event simulation with @testing-library/user-event
+  - Jest-DOM matchers for assertions
+  - Automatic cleanup after each test
+
+**Accessibility (a11y):**
+- **ARIA Labels:** All interactive elements have descriptive aria-labels
+- **ARIA Roles:** Semantic HTML with proper roles (navigation, main, note)
+- **ARIA States:** aria-expanded, aria-current for dynamic states
+- **Keyboard Navigation:** Full keyboard support for all interactive elements
+- **Screen Reader Support:** 
+  - Skip link for main content navigation
+  - Screen reader only text with .sr-only utility class
+  - Decorative icons marked with aria-hidden="true"
+  - Form inputs with associated labels
+- **Focus Management:** Visible focus indicators on all interactive elements
+- **Semantic HTML:** Proper heading hierarchy (h1, h2), nav, main, aside elements
+- **Testing Tools:**
+  - @axe-core/react for runtime accessibility auditing (manual dev testing)
+  - eslint-plugin-jsx-a11y for static analysis
+  - npm run lint for accessibility linting
+- **WCAG 2.1 Compliance:** Level AA standards followed
+
+**Code Splitting & Performance:**
+- **Route-based Code Splitting:** All page components lazy loaded with React.lazy()
+- **Vendor Chunk Splitting:** Separate chunks for react, ui, and form libraries
+- **Loading Indicators:** Suspense boundary with spinner for lazy-loaded routes
+- **Bundle Analysis:** rollup-plugin-visualizer for bundle size visualization
+- **Optimized Chunks:**
+  - `react-vendor`: React core libraries (react, react-dom, react-router-dom)
+  - `ui-vendor`: Radix UI components (dialog, dropdown, toast, tooltip)
+  - `form-vendor`: Form libraries (react-hook-form, zod, resolvers)
+- **Analysis Command:** `npm run analyze` generates interactive bundle visualization
+- **Chunk Size Limit:** 600KB warning threshold
 
 **Error Boundaries:**
 - **Library:** react-error-boundary v4.0.11
@@ -1055,14 +1168,17 @@ lastUpdated: ISO timestamp
 
 **Routing Structure:**
 - `/` - Redirects to `/dashboard`
-- `/login` - Login page (public)
-- `/signup` - Signup page (public)
-- `/auth-callback` - OAuth callback handler (public)
-- `/dashboard` - Main dashboard (protected)
-- `/namespaces` - Namespace management (protected)
-- `/pricing` - Pricing and upgrade (protected)
+- `/login` - Login page (public, lazy loaded)
+- `/signup` - Signup page (public, lazy loaded)
+- `/auth-callback` - OAuth callback handler (public, lazy loaded)
+- `/dashboard` - Main dashboard (protected, lazy loaded)
+- `/namespaces` - Namespace management (protected, lazy loaded)
+- `/pricing` - Pricing and upgrade (protected, lazy loaded)
 
 **Route Configuration:** `/packages/dashboard/src/App.tsx`
+- All routes wrapped in Suspense boundary with loading spinner
+- React.lazy() for dynamic imports of all page components
+- Automatic code splitting per route
 
 
 **Page Components:**
@@ -1075,11 +1191,12 @@ lastUpdated: ISO timestamp
 
 
 **Key Components:**
-- `/packages/dashboard/src/components/layout/DashboardLayout.tsx` - Layout wrapper with nav (enhanced with icons and active states)
+- `/packages/dashboard/src/components/layout/DashboardLayout.tsx` - Layout wrapper with accessible nav (icons, active states, ARIA labels)
+- `/packages/dashboard/src/components/SkipLink.tsx` - Skip to main content link for keyboard users
 - `/packages/dashboard/src/components/ProtectedRoute.tsx` - Auth guard for routes
 - `/packages/dashboard/src/components/ErrorFallback.tsx` - Error boundary fallback UI with retry functionality
 - `/packages/dashboard/src/components/UsageStats.tsx` - Usage metrics display (color-coded status system)
-- `/packages/dashboard/src/components/ApiKeyDisplay.tsx` - API key management UI (enhanced copy feedback with toast, checkmark animation, and background flash)
+- `/packages/dashboard/src/components/ApiKeyDisplay.tsx` - API key management UI (enhanced copy feedback, ARIA labels)
 - `/packages/dashboard/src/components/NamespaceDetails.tsx` - Namespace info and actions (custom dialogs for view/delete)
 - `/packages/dashboard/src/components/StoredItems.tsx` - Key-value list viewer
 - `/packages/dashboard/src/components/ApiTester.tsx` - Interactive API testing tool (enhanced with syntax highlighting and inline errors)
@@ -1115,6 +1232,7 @@ lastUpdated: ISO timestamp
 - Custom dialogs replacing all browser alerts and confirms
 - Accessible UI component library with Radix UI primitives
 - React error boundaries with fallback UI and error logging
+- Full accessibility (a11y) implementation with ARIA labels, keyboard navigation, and screen reader support
 
 ### UI Component Library
 
@@ -1586,6 +1704,29 @@ try {
 - `npm run build:sdk` - Build JavaScript SDK only
 - `npm run clean` - Remove all build artifacts and node_modules
 
+**Analysis:**
+- `cd packages/dashboard && npm run analyze` - Generate bundle size visualization
+- Opens interactive HTML report showing chunk sizes and dependencies
+
+**Linting:**
+- `cd packages/dashboard && npm run lint` - Run ESLint with accessibility checks
+- `cd packages/infrastructure && npm run lint` - Run ESLint on Lambda code
+- `npm run lint` - Lint all packages from root
+- `npm run format` - Format all files with Prettier
+- `npm run format:check` - Check formatting without changes
+
+**Code Quality:**
+- Pre-commit hooks automatically run linting and formatting
+- CI/CD pipeline runs all quality checks on push/PR
+- ESLint checks for TypeScript issues and accessibility
+- Prettier ensures consistent code style
+
+**Testing Strategy:**
+- **Dashboard:** Component tests, utility tests, user interaction tests
+- **Infrastructure:** Lambda utility tests, validation tests, error handling tests
+- **Coverage Target:** 80%+ code coverage
+- **Test Types:** Unit tests (no integration tests yet)
+
 **Deployment:**
 - `npm run deploy:infra` - Deploy AWS infrastructure via CDK
 - `npm run deploy:backend` - Build and deploy backend infrastructure
@@ -1594,7 +1735,27 @@ try {
 - `npm run deploy:all` - Build frontend + deploy infrastructure
 
 **Testing:**
-- `npm run loadtest` - Run Artillery load tests
+- `npm run loadtest` - Run comprehensive load tests
+- `npm run loadtest:rate-limit` - Test rate limiting behavior
+- `npm run loadtest:concurrent` - Test concurrent operations
+- `npm run loadtest:tiers` - Simulate subscription tier traffic
+- `npm run loadtest:report` - Generate HTML performance report
+
+**Load Testing Features:**
+- **Scenarios:** Write-heavy (40%), Read-heavy (50%), List (5%), Delete (5%)
+- **Phases:** Warm up → Ramp up → Sustained load → Peak load → Cool down
+- **Rate Limit Testing:** Burst 200 requests to trigger 429 responses
+- **Concurrent Testing:** 100 req/s to same keys for race condition testing
+- **Tier Simulation:** 10/50/100 req/s for Free/Starter/Pro tiers
+- **Metrics:** Response times, error rates, throughput, status codes
+- **Expectations:** Status code validation, content type checks
+
+**Unit Testing:**
+- `cd packages/dashboard && npm test` - Run dashboard tests
+- `cd packages/dashboard && npm run test:ui` - Run dashboard tests with UI
+- `cd packages/dashboard && npm run test:coverage` - Dashboard coverage report
+- `cd packages/infrastructure && npm test` - Run Lambda tests
+- `cd packages/infrastructure && npm run test:coverage` - Lambda coverage report
 
 
 ### Configuration Files
@@ -1979,6 +2140,31 @@ aws cloudfront create-invalidation \
 - `tailwind-merge` v2.0.0 - Tailwind class merging utility
 - `tailwindcss` - Utility-first CSS
 - `vite` - Build tool and dev server
+
+**Accessibility (Dashboard):**
+- `@axe-core/react` v4.8.0 - Runtime accessibility testing (manual dev testing)
+- `eslint-plugin-jsx-a11y` v6.8.0 - Static accessibility linting
+
+**Testing (Dashboard):**
+- `vitest` v1.0.0 - Unit test framework
+- `@vitest/ui` v1.0.0 - Interactive test UI
+- `@vitest/coverage-v8` v1.0.0 - Coverage reporting
+- `@testing-library/react` v14.1.2 - React component testing
+- `@testing-library/jest-dom` v6.1.5 - DOM matchers
+- `@testing-library/user-event` v14.5.1 - User interaction simulation
+- `jsdom` v23.0.0 - DOM environment
+
+**Testing (Infrastructure):**
+- `vitest` v1.0.0 - Unit test framework
+- `@vitest/coverage-v8` v1.0.0 - Coverage reporting
+
+**Code Quality (Root):**
+- `eslint` v8.55.0 - JavaScript/TypeScript linting
+- `@typescript-eslint/eslint-plugin` v6.15.0 - TypeScript ESLint rules
+- `@typescript-eslint/parser` v6.15.0 - TypeScript parser for ESLint
+- `prettier` v3.1.1 - Code formatting
+- `husky` v8.0.3 - Git hooks
+- `lint-staged` v15.2.0 - Run linters on staged files
 
 **Frontend (Landing):**
 - `astro` - Static site generator

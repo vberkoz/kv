@@ -1,0 +1,33 @@
+config:
+  target: 'https://api.kv.vberkoz.com'
+  phases:
+    - duration: 60
+      arrivalRate: 100
+      name: 'High concurrency'
+  defaults:
+    headers:
+      x-api-key: '{{ $env.API_KEY }}'
+      Content-Type: 'application/json'
+  plugins:
+    expect: {}
+
+scenarios:
+  - name: 'Concurrent writes to same keys'
+    weight: 50
+    flow:
+      - put:
+          url: '/v1/loadtest/shared:{{ $randomNumber(1, 10) }}'
+          json:
+            value:
+              counter: '{{ $randomNumber() }}'
+              timestamp: '{{ $timestamp() }}'
+          expect:
+            - statusCode: 200
+
+  - name: 'Concurrent reads from same keys'
+    weight: 50
+    flow:
+      - get:
+          url: '/v1/loadtest/shared:{{ $randomNumber(1, 10) }}'
+          expect:
+            - statusCode: [200, 404]

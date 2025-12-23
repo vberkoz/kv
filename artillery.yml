@@ -1,39 +1,77 @@
 config:
   target: 'https://api.kv.vberkoz.com'
   phases:
-    - duration: 60
-      arrivalRate: 10
+    - duration: 30
+      arrivalRate: 5
       name: 'Warm up'
+    - duration: 60
+      arrivalRate: 20
+      name: 'Ramp up'
     - duration: 120
       arrivalRate: 50
       name: 'Sustained load'
     - duration: 60
       arrivalRate: 100
       name: 'Peak load'
+    - duration: 30
+      arrivalRate: 10
+      name: 'Cool down'
   defaults:
     headers:
-      Authorization: 'Bearer {{ $env.API_KEY }}'
+      x-api-key: '{{ $env.API_KEY }}'
       Content-Type: 'application/json'
+  plugins:
+    expect: {}
+  processor: './artillery-processor.js'
 
 scenarios:
-  - name: 'PUT and GET operations'
-    weight: 70
+  - name: 'Write-heavy workload'
+    weight: 40
     flow:
       - put:
-          url: '/v1/loadtest/key-{{ $randomNumber() }}'
+          url: '/v1/loadtest/user:{{ $randomNumber(1, 10000) }}'
           json:
             value:
+              id: '{{ $randomNumber() }}'
+              name: 'User {{ $randomString() }}'
+              email: 'user{{ $randomNumber() }}@example.com'
               timestamp: '{{ $timestamp() }}'
-              data: 'test-data-{{ $randomString() }}'
-      - get:
-          url: '/v1/loadtest/key-{{ $randomNumber() }}'
-      - think: 1
+          expect:
+            - statusCode: 200
+      - think: 0.5
 
-  - name: 'List and DELETE operations'
-    weight: 30
+  - name: 'Read-heavy workload'
+    weight: 50
     flow:
       - get:
-          url: '/v1/loadtest?prefix=key-'
+          url: '/v1/loadtest/user:{{ $randomNumber(1, 10000) }}'
+          expect:
+            - statusCode: [200, 404]
+      - think: 0.3
+
+  - name: 'List operations'
+    weight: 5
+    flow:
+      - get:
+          url: '/v1/loadtest?prefix=user:'
+          expect:
+            - statusCode: 200
+            - contentType: json
+      - think: 1
+
+  - name: 'Delete operations'
+    weight: 5
+    flow:
       - delete:
-          url: '/v1/loadtest/key-{{ $randomNumber() }}'
-      - think: 2
+          url: '/v1/loadtest/user:{{ $randomNumber(1, 10000) }}'
+          expect:
+            - statusCode: [200, 404]
+      - think: 0.5
+
+  - name: 'Rate limit test'
+    weight: 0
+    flow:
+      - loop:
+          - get:
+              url: '/v1/loadtest/rate-test'
+          count: 150

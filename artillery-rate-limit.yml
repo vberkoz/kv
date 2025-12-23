@@ -1,0 +1,25 @@
+config:
+  target: 'https://api.kv.vberkoz.com'
+  phases:
+    - duration: 10
+      arrivalRate: 1
+      name: 'Rate limit test'
+  defaults:
+    headers:
+      x-api-key: '{{ $env.API_KEY }}'
+      Content-Type: 'application/json'
+  plugins:
+    expect: {}
+
+scenarios:
+  - name: 'Burst requests to trigger rate limit'
+    flow:
+      - loop:
+          - get:
+              url: '/v1/loadtest/rate-test-{{ $randomNumber() }}'
+              capture:
+                - json: '$.error'
+                  as: 'errorMsg'
+              expect:
+                - statusCode: [200, 404, 429]
+          count: 200

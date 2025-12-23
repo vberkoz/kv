@@ -87,9 +87,28 @@ export async function validateApiKey(apiKey: string): Promise<AuthenticatedUser 
   }
 
   const apiKeyItem = result.Items[0];
-  const userId = apiKeyItem.userId;
   
-  logger.debug('API key validated', { userId });
+  if (apiKeyItem.expiresAt && new Date(apiKeyItem.expiresAt) < new Date()) {
+    logger.warn('Expired API key attempt', { expiresAt: apiKeyItem.expiresAt });
+    throw new UnauthorizedError('API key has expired');
+  }
+  
+  const userId = apiKeyItem.userId;
+  const permissions = apiKeyItem.permissions || ['read', 'write', 'delete'];
+  
+  logger.debug('API key validated', { userId, permissions });
+  
+  await docClient.send(new PutCommand({
+    TableName: TABLE_NAME,
+    Key: {
+      PK: apiKeyItem.PK,
+      SK: apiKeyItem.SK
+    },
+    UpdateExpression: 'SET lastUsedAt = :now',
+    ExpressionAttributeValues: {
+      ':now': new Date().toISOString()
+    }
+  }));
   
   const userResult = await docClient.send(new QueryCommand({
     TableName: TABLE_NAME,
@@ -123,6 +142,7 @@ export async function validateApiKey(apiKey: string): Promise<AuthenticatedUser 
     userId,
     plan,
     apiKey,
+    permissions,
     rateLimitHeaders: rateLimitCheck.headers
   };
 }

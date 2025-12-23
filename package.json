@@ -20,11 +20,25 @@
     "deploy:dashboard": "npm run build -w @kv/dashboard && npm run deploy -w @kv/infrastructure",
     "deploy:all": "npm run build:frontend && npm run deploy -w @kv/infrastructure",
     "loadtest": "artillery run artillery.yml",
-    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules"
+    "loadtest:rate-limit": "artillery run artillery-rate-limit.yml",
+    "loadtest:concurrent": "artillery run artillery-concurrent.yml",
+    "loadtest:tiers": "artillery run artillery-tiers.yml",
+    "loadtest:report": "artillery run artillery.yml --output report.json && artillery report report.json",
+    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules",
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
     "artillery": "^2.0.0",
+    "eslint": "^8.55.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.1.1",
     "typescript": "^5.0.0"
   }
 }

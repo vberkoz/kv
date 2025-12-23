@@ -1,0 +1,34 @@
+config:
+  target: 'https://api.kv.vberkoz.com'
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: 'Free tier simulation'
+    - duration: 60
+      arrivalRate: 50
+      name: 'Starter tier simulation'
+    - duration: 60
+      arrivalRate: 100
+      name: 'Pro tier simulation'
+  defaults:
+    headers:
+      x-api-key: '{{ $env.API_KEY }}'
+      Content-Type: 'application/json'
+  plugins:
+    expect: {}
+
+scenarios:
+  - name: 'Mixed operations'
+    flow:
+      - put:
+          url: '/v1/loadtest/tier-test:{{ $randomNumber() }}'
+          json:
+            value:
+              data: 'test-{{ $randomString() }}'
+          expect:
+            - statusCode: [200, 429]
+      - get:
+          url: '/v1/loadtest/tier-test:{{ $randomNumber() }}'
+          expect:
+            - statusCode: [200, 404, 429]
+      - think: 0.5

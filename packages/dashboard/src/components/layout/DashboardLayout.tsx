@@ -50,8 +50,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="md:hidden fixed top-0 left-0 right-0 bg-white shadow z-10">
         <div className="px-4 py-4 flex justify-between items-center">
           <Link to="/dashboard" className="text-xl font-bold">KV Storage</Link>
-          <button onClick={() => setMenuOpen(!menuOpen)} className="p-2">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button 
+            onClick={() => setMenuOpen(!menuOpen)} 
+            className="p-2"
+            aria-label="Toggle navigation menu"
+            aria-expanded={menuOpen}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
             </svg>
           </button>
@@ -59,28 +64,32 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </div>
 
       {/* Sidebar */}
-      <aside className={`${menuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed inset-y-0 left-0 w-64 bg-white shadow-lg transition-transform duration-300 z-20 flex flex-col`}>
+      <aside 
+        className={`${menuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed inset-y-0 left-0 w-64 bg-white shadow-lg transition-transform duration-300 z-20 flex flex-col`}
+        aria-label="Main navigation"
+      >
         <div className="p-6 border-b">
           <Link to="/dashboard" className="text-xl font-bold flex items-center gap-2">
-            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
             </svg>
             KV Storage
           </Link>
         </div>
-        <nav className="flex-1 px-4 py-6">
+        <nav className="flex-1 px-4 py-6" aria-label="Primary">
           {navItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
               onClick={handleNavClick}
+              aria-current={isActive(item.path) ? 'page' : undefined}
               className={`flex items-center gap-3 py-3 px-4 rounded-lg mb-1 transition-all ${
                 isActive(item.path)
                   ? 'bg-blue-600 text-white shadow-md'
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
             >
-              {item.icon}
+              <span aria-hidden="true">{item.icon}</span>
               <span className="font-medium">{item.label}</span>
             </Link>
           ))}
@@ -90,8 +99,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             onClick={logout}
             variant="outline"
             className="w-full justify-center"
+            aria-label="Logout from account"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
             Logout
@@ -100,14 +110,20 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Overlay */}
-      {menuOpen && <div onClick={() => setMenuOpen(false)} className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-10 animate-fade-in cursor-pointer"></div>}
+      {menuOpen && (
+        <div 
+          onClick={() => setMenuOpen(false)} 
+          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-10 animate-fade-in cursor-pointer"
+          aria-hidden="true"
+        ></div>
+      )}
 
       {/* Main Content */}
-      <div className="flex-1 ml-0 md:ml-64 mt-16 md:mt-0">
+      <main id="main-content" className="flex-1 ml-0 md:ml-64 mt-16 md:mt-0">
         <div className="max-w-6xl mx-auto p-4 md:p-6">
           {children}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

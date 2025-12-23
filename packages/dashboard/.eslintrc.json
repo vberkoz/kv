@@ -1,0 +1,16 @@
+{
+  "extends": [
+    "../../.eslintrc.json",
+    "plugin:jsx-a11y/recommended"
+  ],
+  "plugins": ["jsx-a11y"],
+  "env": {
+    "browser": true
+  },
+  "rules": {
+    "jsx-a11y/anchor-is-valid": "warn",
+    "jsx-a11y/click-events-have-key-events": "warn",
+    "jsx-a11y/no-static-element-interactions": "warn",
+    "jsx-a11y/label-has-associated-control": "warn"
+  }
+}

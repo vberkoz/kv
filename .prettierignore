@@ -1,0 +1,8 @@
+node_modules
+dist
+build
+cdk.out
+coverage
+.next
+*.min.js
+package-lock.json

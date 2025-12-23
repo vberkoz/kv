@@ -6,6 +6,17 @@ export interface User {
   createdAt: string;
 }
 
+export interface ApiKey {
+  apiKeyId: string;
+  userId: string;
+  name: string;
+  hashedKey: string;
+  permissions: ('read' | 'write' | 'delete')[];
+  expiresAt?: string;
+  lastUsedAt?: string;
+  createdAt: string;
+}
+
 export interface Namespace {
   namespaceId: string;
   userId: string;
@@ -38,4 +49,5 @@ export interface AuthenticatedUser {
   userId: string;
   plan: 'free' | 'pro' | 'scale';
   apiKey: string;
+  permissions?: ('read' | 'write' | 'delete')[];
 }
