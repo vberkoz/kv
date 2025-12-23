@@ -1,4 +1,4 @@
-import { QueryCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { QueryCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient, TABLE_NAME, GSI_NAME } from './dynamodb';
 import { AuthenticatedUser } from '@kv/shared';
 import { createHash } from 'crypto';
@@ -98,7 +98,7 @@ export async function validateApiKey(apiKey: string): Promise<AuthenticatedUser 
   
   logger.debug('API key validated', { userId, permissions });
   
-  await docClient.send(new PutCommand({
+  await docClient.send(new UpdateCommand({
     TableName: TABLE_NAME,
     Key: {
       PK: apiKeyItem.PK,
@@ -144,5 +144,5 @@ export async function validateApiKey(apiKey: string): Promise<AuthenticatedUser 
     apiKey,
     permissions,
     rateLimitHeaders: rateLimitCheck.headers
-  };
+  } as AuthenticatedUser & { rateLimitHeaders: Record<string, string> };
 }

@@ -7,7 +7,8 @@ import { successResponse, errorResponse } from './shared/response';
 export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
   try {
     const token = event.headers.authorization?.replace('Bearer ', '');
-    if (!token) return errorResponse('Missing token', 401);
+    const origin = event.headers.origin || event.headers.Origin;
+    if (!token) return errorResponse('Missing token', 401, undefined, origin);
 
     const user = await validateToken(token);
 
@@ -26,11 +27,12 @@ export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
       createdAt: item.createdAt
     }));
 
-    return successResponse({ namespaces });
+    return successResponse({ namespaces }, 200, undefined, undefined, origin);
   } catch (error: any) {
+    const origin = event.headers.origin;
     if (error.message === 'Unauthorized') {
-      return errorResponse('Unauthorized', 401);
+      return errorResponse('Unauthorized', 401, undefined, origin);
     }
-    return errorResponse('Internal server error', 500);
+    return errorResponse('Internal server error', 500, undefined, origin);
   }
 }

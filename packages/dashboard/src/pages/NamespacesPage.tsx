@@ -35,6 +35,10 @@ export default function NamespacesPage() {
             const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/v1/${ns.name}`, {
               headers: { 'x-api-key': apiKey }
             });
+            if (!res.ok) {
+              counts[ns.name] = 0;
+              return;
+            }
             const data = await res.json();
             counts[ns.name] = data.keys?.length || 0;
           } catch {

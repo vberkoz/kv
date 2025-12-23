@@ -1,7 +1,7 @@
 import { Stack, StackProps, RemovalPolicy, CfnOutput, Duration } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { Bucket, BlockPublicAccess } from 'aws-cdk-lib/aws-s3';
-import { Distribution, ViewerProtocolPolicy, OriginAccessIdentity, Function as CfFunction, FunctionCode, FunctionEventType, AllowedMethods, CachePolicy, OriginRequestPolicy, OriginProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
+import { Distribution, ViewerProtocolPolicy, OriginAccessIdentity, Function as CfFunction, FunctionCode, FunctionEventType, AllowedMethods, CachePolicy, OriginRequestPolicy, OriginProtocolPolicy, ResponseHeadersPolicy, HeadersFrameOption, HeadersReferrerPolicy } from 'aws-cdk-lib/aws-cloudfront';
 import { S3BucketOrigin, HttpOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { Certificate, CertificateValidation } from 'aws-cdk-lib/aws-certificatemanager';
@@ -49,12 +49,27 @@ export class LandingStack extends Stack {
       `)
     });
 
+    const securityHeadersPolicy = new ResponseHeadersPolicy(this, 'LandingSecurityHeaders', {
+      securityHeadersBehavior: {
+        contentTypeOptions: { override: true },
+        frameOptions: { frameOption: HeadersFrameOption.DENY, override: true },
+        referrerPolicy: { referrerPolicy: HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN, override: true },
+        strictTransportSecurity: { accessControlMaxAge: Duration.seconds(31536000), includeSubdomains: true, override: true },
+        xssProtection: { protection: true, modeBlock: true, override: true },
+        contentSecurityPolicy: {
+          contentSecurityPolicy: "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.paddle.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.kv.vberkoz.com https://cdn.paddle.com; frame-src https://cdn.paddle.com; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+          override: true
+        }
+      }
+    });
+
     const distribution = new Distribution(this, 'LandingDistribution', {
       domainNames: [landingDomain],
       certificate,
       defaultBehavior: {
         origin: S3BucketOrigin.withOriginAccessIdentity(bucket, { originAccessIdentity: oai }),
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        responseHeadersPolicy: securityHeadersPolicy,
         functionAssociations: [{
           function: cfFunction,
           eventType: FunctionEventType.VIEWER_REQUEST
@@ -146,12 +161,27 @@ function handler(event) {
       `)
     });
 
+    const dashboardSecurityHeadersPolicy = new ResponseHeadersPolicy(this, 'DashboardSecurityHeaders', {
+      securityHeadersBehavior: {
+        contentTypeOptions: { override: true },
+        frameOptions: { frameOption: HeadersFrameOption.DENY, override: true },
+        referrerPolicy: { referrerPolicy: HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN, override: true },
+        strictTransportSecurity: { accessControlMaxAge: Duration.seconds(31536000), includeSubdomains: true, override: true },
+        xssProtection: { protection: true, modeBlock: true, override: true },
+        contentSecurityPolicy: {
+          contentSecurityPolicy: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.paddle.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.kv.vberkoz.com https://d-cw2uu11x0g.execute-api.us-east-1.amazonaws.com https://cdn.paddle.com; frame-src https://cdn.paddle.com; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+          override: true
+        }
+      }
+    });
+
     const distribution = new Distribution(this, 'DashboardDistribution', {
       domainNames: [dashboardDomain],
       certificate,
       defaultBehavior: {
         origin: S3BucketOrigin.withOriginAccessIdentity(bucket, { originAccessIdentity: oai }),
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        responseHeadersPolicy: dashboardSecurityHeadersPolicy,
         functionAssociations: [{
           function: cfFunction,
           eventType: FunctionEventType.VIEWER_REQUEST

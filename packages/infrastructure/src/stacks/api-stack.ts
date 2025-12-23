@@ -1,4 +1,4 @@
-import { Stack, StackProps, CfnOutput } from 'aws-cdk-lib';
+import { Stack, StackProps, CfnOutput, Duration } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { HttpApi, HttpMethod, CorsHttpMethod, DomainName } from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpJwtAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
@@ -64,7 +64,9 @@ export class ApiStack extends Stack {
           `https://dashboard.kv.${baseDomain}`
         ],
         allowMethods: [CorsHttpMethod.ANY],
-        allowHeaders: ['Content-Type', 'Authorization', 'x-api-key']
+        allowHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'x-correlation-id'],
+        allowCredentials: true,
+        maxAge: Duration.days(1)
       }
     });
 

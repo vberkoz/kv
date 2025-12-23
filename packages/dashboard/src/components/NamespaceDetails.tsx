@@ -106,6 +106,7 @@ export default function NamespaceDetails({ namespace, apiKey }: NamespaceDetails
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Value: {viewData?.key}</DialogTitle>
+            <DialogDescription>JSON value stored in this key</DialogDescription>
           </DialogHeader>
           <pre className="bg-gray-900 text-green-400 p-3 rounded overflow-x-auto text-xs max-h-60 font-mono">
             {JSON.stringify(viewData?.value, null, 2)}

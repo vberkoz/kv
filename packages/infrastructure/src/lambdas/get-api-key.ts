@@ -1,43 +1,46 @@
-import { APIGatewayEvent, APIResponse } from '@kv/shared';
 import { QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient, TABLE_NAME } from './shared/dynamodb';
-import { validateToken } from './shared/auth';
-import { successResponse, errorResponse } from './shared/response';
+import { successResponse } from './shared/response';
+import { ValidationError, NotFoundError } from './shared/errors';
+import { createHandler } from './shared/middleware';
+import { logger } from './shared/logger';
 
-export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
-  try {
-    console.log('Event:', JSON.stringify(event, null, 2));
-    
-    // Extract user ID from JWT claims provided by API Gateway authorizer
-    const userId = (event as any).requestContext?.authorizer?.jwt?.claims?.sub;
-    if (!userId) {
-      return errorResponse('Invalid token - no user ID', 401);
-    }
-    
-    console.log('User ID from JWT claims:', userId);
-
-    const result = await docClient.send(new QueryCommand({
-      TableName: TABLE_NAME,
-      KeyConditionExpression: 'PK = :pk AND SK = :sk',
-      ExpressionAttributeValues: {
-        ':pk': `USER#${userId}`,
-        ':sk': 'APIKEY'
-      }
-    }));
-
-    if (!result.Items || result.Items.length === 0) {
-      return errorResponse('No API key found', 404);
-    }
-
-    // Return actual API key and example data
-    return successResponse({ 
-      apiKey: result.Items[0].apiKey,
-      exampleNamespace: 'my-app',
-      exampleKey: 'user:demo',
-      createdAt: result.Items[0].createdAt 
-    });
-  } catch (error: any) {
-    console.error('Error in get-api-key:', error);
-    return errorResponse('Internal server error', 500);
+const baseHandler = async (event: any, context: any) => {
+  const userId = event.requestContext?.authorizer?.jwt?.claims?.sub;
+  if (!userId) {
+    throw new ValidationError('Invalid token - no user ID');
   }
-}
+
+  logger.info('Fetching API keys for user', { userId });
+
+  // Query for all API keys for this user
+  const result = await docClient.send(new QueryCommand({
+    TableName: TABLE_NAME,
+    KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
+    ExpressionAttributeValues: {
+      ':pk': `USER#${userId}`,
+      ':sk': 'APIKEY#'
+    }
+  }));
+
+  if (!result.Items || result.Items.length === 0) {
+    logger.info('No API keys found for user', { userId });
+    throw new NotFoundError('No API key found');
+  }
+
+  // Return the first (primary) API key - never return the hashed key
+  const primaryKey = result.Items[0];
+  const correlationId = event.headers['x-correlation-id'];
+  
+  return successResponse({ 
+    apiKey: primaryKey.apiKey,
+    apiKeyId: primaryKey.apiKeyId,
+    name: primaryKey.name,
+    permissions: primaryKey.permissions,
+    expiresAt: primaryKey.expiresAt,
+    lastUsedAt: primaryKey.lastUsedAt,
+    createdAt: primaryKey.createdAt
+  }, 200, correlationId);
+};
+
+export const handler = createHandler(baseHandler);

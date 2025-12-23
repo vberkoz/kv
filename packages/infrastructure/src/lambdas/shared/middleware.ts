@@ -6,6 +6,17 @@ import { validateApiKey } from './auth';
 import { AppError } from './errors';
 import { APIGatewayEvent } from '@kv/shared';
 
+const ALLOWED_ORIGINS = ['https://kv.vberkoz.com', 'https://dashboard.kv.vberkoz.com'];
+
+function getCorsHeaders(origin?: string): Record<string, string> {
+  const validOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin': validOrigin,
+    'Access-Control-Allow-Credentials': 'true',
+    'Vary': 'Origin'
+  };
+}
+
 export const loggingMiddleware = (): middy.MiddlewareObj => ({
   before: async (request) => {
     const event = request.event as APIGatewayEvent;
@@ -45,6 +56,7 @@ export const errorHandlerMiddleware = (): middy.MiddlewareObj => ({
     const error = request.error;
     const event = request.event as APIGatewayEvent;
     const correlationId = event.headers['x-correlation-id'];
+    const origin = event.headers.origin || event.headers.Origin;
     
     if (error instanceof AppError) {
       const rateLimitHeaders = (error as any).rateLimitHeaders || {};
@@ -52,7 +64,7 @@ export const errorHandlerMiddleware = (): middy.MiddlewareObj => ({
         statusCode: error.statusCode,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
+          ...getCorsHeaders(origin),
           ...(correlationId && { 'x-correlation-id': correlationId }),
           ...rateLimitHeaders
         },
@@ -68,7 +80,7 @@ export const errorHandlerMiddleware = (): middy.MiddlewareObj => ({
         statusCode: 500,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
+          ...getCorsHeaders(origin),
           ...(correlationId && { 'x-correlation-id': correlationId })
         },
         body: JSON.stringify({

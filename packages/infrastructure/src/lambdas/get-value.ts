@@ -24,7 +24,9 @@ const baseHandler = async (event: any, context: any) => {
   }
 
   const correlationId = event.headers['x-correlation-id'];
-  return successResponse({ value: result.Item.value }, 200, correlationId);
+  const origin = event.headers.origin || event.headers.Origin;
+  const rateLimitHeaders = (context as any).rateLimitHeaders || {};
+  return successResponse({ value: result.Item.value }, 200, correlationId, rateLimitHeaders, origin);
 };
 
 export const handler = createApiKeyHandler(baseHandler);

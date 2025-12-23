@@ -2,7 +2,7 @@
 
 **Project Name:** KV Storage  
 **Tagline:** Serverless key-value storage API  
-**Status:** Implementation complete, UI/UX Phase 1 deployed, Error Handling & Logging implemented, Lambda Best Practices implemented, API Rate Limiting implemented, State Management implemented, UI Component Library implemented, Error Boundaries implemented, Code Splitting & Lazy Loading implemented, Accessibility (a11y) implemented, Unit Testing implemented, Code Quality Tools implemented, Load Testing Improvements implemented, API Key Security implemented, ready for launch
+**Status:** Implementation complete, UI/UX Phase 1 deployed, Error Handling & Logging implemented, Lambda Best Practices implemented, API Rate Limiting implemented, State Management implemented, UI Component Library implemented, Error Boundaries implemented, Code Splitting & Lazy Loading implemented, Accessibility (a11y) implemented, Unit Testing implemented, Code Quality Tools implemented, Load Testing Improvements implemented, API Key Security implemented, Content Security Policy implemented, CORS Hardening implemented, ready for launch
 
 ## Core Value Proposition
 
@@ -13,6 +13,7 @@ Simple REST API for storing and retrieving JSON data without managing infrastruc
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         CloudFront CDN                          │
+│                    (CSP + Security Headers)                     │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  Landing (domain.com)          Dashboard (dashboard.domain.com) │
@@ -663,10 +664,27 @@ fields @timestamp, correlationId, operation, userId, statusCode
 
 ### Middleware & Utilities
 
-**Authentication Middleware:**
+**Middleware & Utilities:**
 - Implemented in each Lambda handler
 - Extracts and validates JWT or API key
 - Returns 401 if authentication fails
+
+**CORS Configuration:**
+- **Origin Validation:** Strict whitelist of allowed origins (landing + dashboard domains)
+- **Preflight Caching:** 24-hour max-age for OPTIONS requests
+- **Credentials Support:** Allow credentials for authenticated requests
+- **Dynamic Headers:** Origin validated per-request in Lambda responses
+- **Vary Header:** Included to ensure proper caching behavior
+- **Allowed Headers:** Content-Type, Authorization, x-api-key, x-correlation-id
+- **Implementation:**
+  - API Gateway: Preflight configuration with specific origins
+  - Lambda: Runtime origin validation with whitelist
+  - Response utilities: Dynamic CORS headers based on request origin
+- **Location:** 
+  - `/packages/infrastructure/src/stacks/api-stack.ts` - API Gateway CORS
+  - `/packages/infrastructure/src/lambdas/shared/cors.ts` - Origin validation
+  - `/packages/infrastructure/src/lambdas/shared/response.ts` - CORS headers
+  - `/packages/infrastructure/src/lambdas/shared/middleware.ts` - Middleware CORS
 
 **Rate Limiting:**
 - Checked before KV operations
@@ -675,10 +693,12 @@ fields @timestamp, correlationId, operation, userId, statusCode
 - Location: `/packages/infrastructure/src/lambdas/shared/usage.ts`
 
 **CORS Handling:**
-- Configured in API Gateway
-- Allows origins: landing + dashboard domains
-- Allows headers: Content-Type, Authorization, x-api-key
-- Location: `/packages/infrastructure/src/stacks/api-stack.ts`
+- Configured in API Gateway with preflight caching (24h max-age)
+- Strict origin whitelist: landing + dashboard domains only
+- Runtime origin validation in Lambda responses
+- Credentials support enabled for authenticated requests
+- Vary header for proper cache behavior
+- Location: `/packages/infrastructure/src/stacks/api-stack.ts`, `/packages/infrastructure/src/lambdas/shared/cors.ts`
 
 ---
 
@@ -2052,6 +2072,7 @@ aws dynamodb describe-table --table-name kv-storage-data
 - SSL Certificate: ACM certificate with DNS validation
 - Default root object: index.html
 - Error pages: Custom 404 handling
+- Security Headers: CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy
 
 **Dashboard Distribution:**
 - Origin: S3 bucket (React SPA)
@@ -2059,6 +2080,47 @@ aws dynamodb describe-table --table-name kv-storage-data
 - SSL Certificate: ACM certificate with DNS validation
 - SPA routing: 404 → index.html (for client-side routing)
 - Cache behavior: No caching for index.html
+- Security Headers: CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy
+
+**Content Security Policy (CSP):**
+- **Landing Page CSP:**
+  - `default-src 'self'` - Only allow resources from same origin
+  - `script-src 'self' 'unsafe-inline' https://cdn.paddle.com` - Allow inline scripts and Paddle SDK
+  - `style-src 'self' 'unsafe-inline'` - Allow inline styles
+  - `img-src 'self' data: https:` - Allow images from same origin, data URIs, and HTTPS
+  - `font-src 'self' data:` - Allow fonts from same origin and data URIs
+  - `connect-src 'self' https://api.kv.vberkoz.com` - Allow API connections
+  - `frame-src https://cdn.paddle.com` - Allow Paddle payment frames
+  - `object-src 'none'` - Block plugins
+  - `base-uri 'self'` - Restrict base tag
+  - `form-action 'self'` - Restrict form submissions
+  - `upgrade-insecure-requests` - Upgrade HTTP to HTTPS
+
+- **Dashboard CSP:**
+  - `default-src 'self'` - Only allow resources from same origin
+  - `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.paddle.com` - Allow inline scripts, eval (React), and Paddle SDK
+  - `style-src 'self' 'unsafe-inline'` - Allow inline styles
+  - `img-src 'self' data: https:` - Allow images from same origin, data URIs, and HTTPS
+  - `font-src 'self' data:` - Allow fonts from same origin and data URIs
+  - `connect-src 'self' https://api.kv.vberkoz.com https://d-cw2uu11x0g.execute-api.us-east-1.amazonaws.com` - Allow API connections
+  - `frame-src https://cdn.paddle.com` - Allow Paddle payment frames
+  - `object-src 'none'` - Block plugins
+  - `base-uri 'self'` - Restrict base tag
+  - `form-action 'self'` - Restrict form submissions
+  - `upgrade-insecure-requests` - Upgrade HTTP to HTTPS
+
+**Additional Security Headers:**
+- `X-Content-Type-Options: nosniff` - Prevent MIME type sniffing
+- `X-Frame-Options: DENY` - Prevent clickjacking
+- `Referrer-Policy: strict-origin-when-cross-origin` - Control referrer information
+- `Strict-Transport-Security: max-age=31536000; includeSubDomains` - Force HTTPS for 1 year
+- `X-XSS-Protection: 1; mode=block` - Enable XSS filtering
+
+**Implementation:**
+- CSP headers configured via CloudFront ResponseHeadersPolicy
+- Applied to all responses from CloudFront distributions
+- No CSP violation reporting endpoint (future enhancement)
+- Headers override any origin headers
 
 **Configuration:** `/packages/infrastructure/src/stacks/frontend-stack.ts`
 
