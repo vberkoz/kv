@@ -2,7 +2,7 @@
 
 **Project Name:** KV Storage  
 **Tagline:** Serverless key-value storage API  
-**Status:** Implementation complete, UI/UX Phase 1 deployed, Error Handling & Logging implemented, Lambda Best Practices implemented, API Rate Limiting implemented, State Management implemented, UI Component Library implemented, ready for launch
+**Status:** Implementation complete, UI/UX Phase 1 deployed, Error Handling & Logging implemented, Lambda Best Practices implemented, API Rate Limiting implemented, State Management implemented, UI Component Library implemented, Error Boundaries implemented, ready for launch
 
 ## Core Value Proposition
 
@@ -1009,6 +1009,22 @@ lastUpdated: ISO timestamp
 - `/packages/dashboard/tailwind.config.js` - Tailwind CSS configuration
 - `/packages/dashboard/index.html` - HTML entry point
 
+**Error Boundaries:**
+- **Library:** react-error-boundary v4.0.11
+- **Implementation:** Wraps entire application in App.tsx
+- **Fallback UI:** `/packages/dashboard/src/components/ErrorFallback.tsx`
+  - User-friendly error message with icon
+  - Collapsible error details for debugging
+  - "Try Again" button to reset error boundary
+  - "Go to Dashboard" button for navigation recovery
+- **Error Logging:** `/packages/dashboard/src/services/errorLogger.ts`
+  - Logs errors to backend API endpoint (`POST /v1/errors`)
+  - Captures error message, stack trace, component stack
+  - Includes context: URL, user agent, timestamp
+  - Silent failure if logging fails (console.error fallback)
+- **Reset Behavior:** Redirects to dashboard on reset
+- **Coverage:** Catches all React component errors globally
+
 **State Management:**
 - **Global State:** Zustand v4.4.7 for UI state (sidebar, preferences)
 - **Server State:** React Query v5 for API data with optimistic updates
@@ -1061,6 +1077,7 @@ lastUpdated: ISO timestamp
 **Key Components:**
 - `/packages/dashboard/src/components/layout/DashboardLayout.tsx` - Layout wrapper with nav (enhanced with icons and active states)
 - `/packages/dashboard/src/components/ProtectedRoute.tsx` - Auth guard for routes
+- `/packages/dashboard/src/components/ErrorFallback.tsx` - Error boundary fallback UI with retry functionality
 - `/packages/dashboard/src/components/UsageStats.tsx` - Usage metrics display (color-coded status system)
 - `/packages/dashboard/src/components/ApiKeyDisplay.tsx` - API key management UI (enhanced copy feedback with toast, checkmark animation, and background flash)
 - `/packages/dashboard/src/components/NamespaceDetails.tsx` - Namespace info and actions (custom dialogs for view/delete)
@@ -1097,6 +1114,7 @@ lastUpdated: ISO timestamp
 - Enhanced API Tester with syntax highlighting and inline error messages
 - Custom dialogs replacing all browser alerts and confirms
 - Accessible UI component library with Radix UI primitives
+- React error boundaries with fallback UI and error logging
 
 ### UI Component Library
 
@@ -1213,6 +1231,7 @@ function MyComponent() {
 
 **Services:**
 - `/packages/dashboard/src/services/api.ts` - HTTP client for backend API
+- `/packages/dashboard/src/services/errorLogger.ts` - Error logging service for monitoring
 
 **Constants:**
 - `/packages/dashboard/src/constants/config.ts` - API URLs, Paddle config
@@ -1945,6 +1964,7 @@ aws cloudfront create-invalidation \
 **Frontend (Dashboard):**
 - `react` v18 - UI library
 - `react-router-dom` v6 - Client-side routing
+- `react-error-boundary` v4.0.11 - Error boundary implementation with fallback UI
 - `react-hook-form` v7.48 - Form state management and validation
 - `zod` v3.22.4 - Schema validation for forms
 - `@hookform/resolvers` v3.3.2 - Zod resolver for React Hook Form
