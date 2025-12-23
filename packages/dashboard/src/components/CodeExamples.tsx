@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { API_URL } from '../constants/config';
+import { Button } from './ui/Button';
 
 interface CodeExamplesProps {
   namespace: string;
@@ -38,13 +39,14 @@ export default function CodeExamples({ namespace, apiKey, operation, keyName = '
       <h3 className="font-semibold mb-2">Code Example</h3>
       <div className="flex gap-2 mb-2">
         {(['curl', 'javascript'] as const).map(l => (
-          <button
+          <Button
             key={l}
+            size="sm"
+            variant={lang === l ? 'default' : 'outline'}
             onClick={() => setLang(l)}
-            className={`px-3 py-1 text-sm rounded ${lang === l ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
           >
             {l === 'curl' ? 'cURL' : 'JavaScript'}
-          </button>
+          </Button>
         ))}
       </div>
       <pre className="bg-gray-900 text-white p-3 rounded overflow-x-auto text-xs">

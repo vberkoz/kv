@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import CodeExamples from './CodeExamples';
+import { Button } from './ui/Button';
 
 interface ApiTesterProps {
   namespace: string;
@@ -73,13 +74,14 @@ export default function ApiTester({ namespace, apiKey, keys, onRefresh }: ApiTes
       
       <div className="flex gap-2 mb-4">
         {(['PUT', 'GET', 'DELETE', 'LIST'] as const).map(t => (
-          <button
+          <Button
             key={t}
+            variant={tab === t ? 'default' : 'outline'}
+            size="sm"
             onClick={() => setTab(t)}
-            className={`px-3 py-1 text-sm rounded ${tab === t ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
           >
             {t}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -100,13 +102,13 @@ export default function ApiTester({ namespace, apiKey, keys, onRefresh }: ApiTes
               className="w-full p-2 border rounded text-sm font-mono"
               rows={4}
             />
-            <button
+            <Button
               onClick={handlePut}
               disabled={loading || !key}
-              className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 disabled:opacity-50 text-sm"
+              className="w-full"
             >
               {loading ? 'Sending...' : 'PUT Value'}
-            </button>
+            </Button>
           </>
         )}
 
@@ -120,13 +122,13 @@ export default function ApiTester({ namespace, apiKey, keys, onRefresh }: ApiTes
               <option value="">Select a key</option>
               {keys.map(k => <option key={k} value={k}>{k}</option>)}
             </select>
-            <button
+            <Button
               onClick={handleGet}
               disabled={loading || !key}
-              className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 disabled:opacity-50 text-sm"
+              className="w-full"
             >
               {loading ? 'Fetching...' : 'GET Value'}
-            </button>
+            </Button>
           </>
         )}
 
@@ -140,24 +142,25 @@ export default function ApiTester({ namespace, apiKey, keys, onRefresh }: ApiTes
               <option value="">Select a key</option>
               {keys.map(k => <option key={k} value={k}>{k}</option>)}
             </select>
-            <button
+            <Button
               onClick={handleDelete}
               disabled={loading || !key}
-              className="w-full bg-red-600 text-white p-2 rounded hover:bg-red-700 disabled:opacity-50 text-sm"
+              variant="destructive"
+              className="w-full"
             >
               {loading ? 'Deleting...' : 'DELETE Value'}
-            </button>
+            </Button>
           </>
         )}
 
         {tab === 'LIST' && (
-          <button
+          <Button
             onClick={handleList}
             disabled={loading}
-            className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 disabled:opacity-50 text-sm"
+            className="w-full"
           >
             {loading ? 'Fetching...' : 'LIST All Keys'}
-          </button>
+          </Button>
         )}
 
         {error && (

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import DashboardLayout from '../components/layout/DashboardLayout';
+import { Button } from '../components/ui/Button';
 
 const PADDLE_CLIENT_TOKEN = import.meta.env.VITE_PADDLE_CLIENT_TOKEN;
 const PRICE_IDS = {
@@ -55,12 +56,12 @@ export default function PricingPage() {
               <li>✓ {plan.requests} requests/month</li>
               <li>✓ {plan.storage} storage</li>
             </ul>
-            <button
+            <Button
               onClick={() => handleSubscribe(plan.id)}
-              className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+              className="w-full"
             >
               Subscribe
-            </button>
+            </Button>
           </div>
         ))}
       </div>

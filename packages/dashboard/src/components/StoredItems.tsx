@@ -1,3 +1,5 @@
+import { Button } from './ui/Button';
+
 interface StoredItemsProps {
   keys: string[];
   onGetValue: (key: string) => void;
@@ -18,18 +20,20 @@ export default function StoredItems({ keys, onGetValue, onDeleteValue }: StoredI
           <div key={key} className="flex items-center justify-between bg-gray-50 p-2 rounded text-sm">
             <code className="text-xs flex-1 truncate">{key}</code>
             <div className="flex gap-1">
-              <button
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() => onGetValue(key)}
-                className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
               >
                 View
-              </button>
-              <button
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
                 onClick={() => onDeleteValue(key)}
-                className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200"
               >
                 Delete
-              </button>
+              </Button>
             </div>
           </div>
         ))}

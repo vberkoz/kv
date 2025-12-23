@@ -1,22 +1,24 @@
 import { useState } from 'react';
 import { useApiKey } from '../hooks/useApi';
-import { Toast } from './ui/Toast';
+import { useToast } from '../hooks/useToast';
 
 export function ApiKeyDisplay() {
   const [copied, setCopied] = useState(false);
-  const [showToast, setShowToast] = useState(false);
+  const { toast } = useToast();
   const { data, isLoading } = useApiKey();
   const apiKey = data?.apiKey || '';
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(apiKey);
     setCopied(true);
-    setShowToast(true);
+    toast({
+      title: 'API key copied to clipboard!',
+      variant: 'success',
+    });
     setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <>
     <div className="bg-white p-4 md:p-6 rounded-lg shadow hover:shadow-md transition-shadow">
       <div className="flex items-center gap-2 mb-4">
         <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,7 +77,5 @@ export function ApiKeyDisplay() {
         <span>Keep this key secret. Use it in the <code className="bg-white px-1 py-0.5 rounded text-blue-600">x-api-key</code> header.</span>
       </div>
     </div>
-    {showToast && <Toast message="API key copied to clipboard!" onClose={() => setShowToast(false)} />}
-    </>
   );
 }

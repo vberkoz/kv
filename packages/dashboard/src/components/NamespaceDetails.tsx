@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import StoredItems from './StoredItems';
 import ApiTester from './ApiTester';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/Dialog';
+import { Button } from './ui/Button';
 
 interface ViewData {
   key: string;
@@ -95,38 +97,36 @@ export default function NamespaceDetails({ namespace, apiKey }: NamespaceDetails
               <h4 className="font-semibold text-sm text-red-900 mb-1">Error</h4>
               <p className="text-sm text-red-700">{error}</p>
             </div>
-            <button onClick={() => setError('')} className="text-red-400 hover:text-red-600">✕</button>
+            <Button variant="ghost" size="sm" onClick={() => setError('')}>✕</Button>
           </div>
         </div>
       )}
 
-      {viewData && (
-        <div className="mb-3 bg-blue-50 border border-blue-200 rounded p-3">
-          <div className="flex items-start justify-between mb-2">
-            <h4 className="font-semibold text-sm text-blue-900">Value: {viewData.key}</h4>
-            <button onClick={() => setViewData(null)} className="text-blue-400 hover:text-blue-600">✕</button>
-          </div>
+      <Dialog open={!!viewData} onOpenChange={(open) => !open && setViewData(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Value: {viewData?.key}</DialogTitle>
+          </DialogHeader>
           <pre className="bg-gray-900 text-green-400 p-3 rounded overflow-x-auto text-xs max-h-60 font-mono">
-            {JSON.stringify(viewData.value, null, 2)}
+            {JSON.stringify(viewData?.value, null, 2)}
           </pre>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
-      {deleteConfirm && (
-        <div className="mb-3 bg-yellow-50 border border-yellow-200 rounded p-3">
-          <div className="flex items-start gap-2">
-            <span className="text-yellow-600 text-lg">⚠</span>
-            <div className="flex-1">
-              <h4 className="font-semibold text-sm text-yellow-900 mb-1">Confirm Delete</h4>
-              <p className="text-sm text-yellow-700 mb-3">Delete <code className="bg-yellow-100 px-1 rounded">{deleteConfirm.key}</code>?</p>
-              <div className="flex gap-2">
-                <button onClick={confirmDelete} className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700">Delete</button>
-                <button onClick={() => setDeleteConfirm(null)} className="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <Dialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete <code className="bg-gray-100 px-1 rounded">{deleteConfirm?.key}</code>?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteConfirm(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDelete}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {loading ? (
         <div className="text-gray-600 text-sm">Loading...</div>

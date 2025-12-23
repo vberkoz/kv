@@ -2,7 +2,7 @@
 
 **Project Name:** KV Storage  
 **Tagline:** Serverless key-value storage API  
-**Status:** Implementation complete, UI/UX Phase 1 deployed, Error Handling & Logging implemented, Lambda Best Practices implemented, API Rate Limiting implemented, ready for launch
+**Status:** Implementation complete, UI/UX Phase 1 deployed, Error Handling & Logging implemented, Lambda Best Practices implemented, API Rate Limiting implemented, State Management implemented, UI Component Library implemented, ready for launch
 
 ## Core Value Proposition
 
@@ -231,7 +231,15 @@ packages/dashboard/
 │   ├── components/            # React components
 │   │   ├── layout/
 │   │   │   └── DashboardLayout.tsx
-│   │   ├── ui/                # UI primitives
+│   │   ├── ui/                # UI primitives (Radix UI + CVA)
+│   │   │   ├── Button.tsx
+│   │   │   ├── Card.tsx
+│   │   │   ├── Dialog.tsx
+│   │   │   ├── DropdownMenu.tsx
+│   │   │   ├── Skeleton.tsx
+│   │   │   ├── Toast.tsx
+│   │   │   ├── Tooltip.tsx
+│   │   │   └── index.ts
 │   │   ├── ApiKeyDisplay.tsx
 │   │   ├── ApiTester.tsx
 │   │   ├── CodeExamples.tsx
@@ -239,6 +247,8 @@ packages/dashboard/
 │   │   ├── ProtectedRoute.tsx
 │   │   ├── QuickStart.tsx
 │   │   ├── StoredItems.tsx
+│   │   ├── Toaster.tsx
+│   │   ├── UIExamples.tsx
 │   │   ├── UpgradePrompt.tsx
 │   │   └── UsageStats.tsx
 │   ├── constants/
@@ -246,8 +256,11 @@ packages/dashboard/
 │   ├── context/
 │   │   └── AuthContext.tsx    # Auth state management
 │   ├── hooks/
-│   │   └── useApi.ts          # API interaction hook
+│   │   ├── useApi.ts          # API interaction hook
+│   │   └── useToast.ts        # Toast notification hook
 │   ├── lib/                   # Utilities
+│   │   ├── utils.ts           # cn() helper for className merging
+│   │   └── validation.ts      # Zod schemas
 │   ├── pages/                 # Page components
 │   │   ├── AuthCallback.tsx
 │   │   ├── DashboardPage.tsx
@@ -996,7 +1009,20 @@ lastUpdated: ISO timestamp
 - `/packages/dashboard/tailwind.config.js` - Tailwind CSS configuration
 - `/packages/dashboard/index.html` - HTML entry point
 
-**First-Time User Onboarding:**
+**State Management:**
+- **Global State:** Zustand v4.4.7 for UI state (sidebar, preferences)
+- **Server State:** React Query v5 for API data with optimistic updates
+- **Auth State:** React Context for authentication
+- **Features:**
+  - Optimistic UI updates for namespace creation
+  - Request deduplication and caching (5-10 min stale times)
+  - Offline-first network mode
+  - Automatic cache invalidation
+  - Persistent UI state with localStorage
+- **Store Location:** `/packages/dashboard/src/store/useStore.ts`
+- **Query Hooks:** `/packages/dashboard/src/hooks/useApi.ts`
+
+**First-Time User Onboarding:****
 - Detects users with no namespaces on dashboard load
 - Shows modal overlay with 3-step guide
 - Highlights "Create Namespace" as primary action
@@ -1043,7 +1069,18 @@ lastUpdated: ISO timestamp
 - `/packages/dashboard/src/components/CodeExamples.tsx` - SDK usage examples
 - `/packages/dashboard/src/components/QuickStart.tsx` - Onboarding guide
 - `/packages/dashboard/src/components/UpgradePrompt.tsx` - Plan upgrade CTA
-- `/packages/dashboard/src/components/ui/Toast.tsx` - Toast notification component for user feedback
+- `/packages/dashboard/src/components/Toaster.tsx` - Toast notification renderer
+- `/packages/dashboard/src/components/UIExamples.tsx` - UI component library examples
+
+**UI Component Library:**
+- `/packages/dashboard/src/components/ui/Button.tsx` - Button with variants (default, destructive, outline, ghost, link)
+- `/packages/dashboard/src/components/ui/Card.tsx` - Card layout components
+- `/packages/dashboard/src/components/ui/Dialog.tsx` - Accessible modal dialogs (Radix UI)
+- `/packages/dashboard/src/components/ui/DropdownMenu.tsx` - Accessible dropdown menus (Radix UI)
+- `/packages/dashboard/src/components/ui/Skeleton.tsx` - Loading skeleton animations
+- `/packages/dashboard/src/components/ui/Toast.tsx` - Toast notification primitives (Radix UI)
+- `/packages/dashboard/src/components/ui/Tooltip.tsx` - Accessible tooltips (Radix UI)
+- `/packages/dashboard/src/lib/utils.ts` - cn() helper for className merging with tailwind-merge
 
 **Recent UI/UX Improvements (Phase 1):**
 - Color-coded usage status (blue/yellow/red based on thresholds)
@@ -1059,21 +1096,120 @@ lastUpdated: ISO timestamp
 - Success toast notifications for form submissions
 - Enhanced API Tester with syntax highlighting and inline error messages
 - Custom dialogs replacing all browser alerts and confirms
+- Accessible UI component library with Radix UI primitives
+
+### UI Component Library
+
+**Purpose:** Reusable, accessible component library built on Radix UI primitives
+**Location:** `/packages/dashboard/src/components/ui/`
+
+**Design System:**
+- **Accessibility:** WCAG 2.1 compliant components using Radix UI
+- **Variants:** Component variants managed with class-variance-authority (CVA)
+- **Styling:** Tailwind CSS with consistent design tokens
+- **Animations:** Smooth transitions and loading states
+
+**Core Components:**
+
+1. **Button** (`Button.tsx`)
+   - Variants: default, destructive, outline, ghost, link
+   - Sizes: sm, default, lg, icon
+   - Full keyboard navigation and focus states
+   - Usage: `<Button variant="outline" size="sm">Click me</Button>`
+
+2. **Card** (`Card.tsx`)
+   - Components: Card, CardHeader, CardTitle, CardDescription, CardContent
+   - Consistent layout structure for content sections
+   - Usage: `<Card><CardHeader><CardTitle>Title</CardTitle></CardHeader></Card>`
+
+3. **Dialog** (`Dialog.tsx`)
+   - Accessible modal dialogs with overlay
+   - Keyboard navigation (Esc to close)
+   - Focus trap and scroll lock
+   - Usage: `<Dialog><DialogTrigger><Button>Open</Button></DialogTrigger><DialogContent>...</DialogContent></Dialog>`
+
+4. **DropdownMenu** (`DropdownMenu.tsx`)
+   - Accessible dropdown menus
+   - Keyboard navigation (Arrow keys, Enter, Esc)
+   - Auto-positioning and collision detection
+   - Usage: `<DropdownMenu><DropdownMenuTrigger>Menu</DropdownMenuTrigger><DropdownMenuContent>...</DropdownMenuContent></DropdownMenu>`
+
+5. **Toast** (`Toast.tsx`)
+   - Non-blocking notifications
+   - Variants: default, success, destructive
+   - Auto-dismiss with configurable duration
+   - Swipe to dismiss on mobile
+   - Usage: `toast({ title: 'Success', description: 'Action completed', variant: 'success' })`
+
+6. **Tooltip** (`Tooltip.tsx`)
+   - Accessible tooltips with keyboard support
+   - Auto-positioning
+   - Configurable delay
+   - Usage: `<Tooltip><TooltipTrigger>Hover</TooltipTrigger><TooltipContent>Info</TooltipContent></Tooltip>`
+
+7. **Skeleton** (`Skeleton.tsx`)
+   - Loading state placeholders
+   - Pulse animation
+   - Usage: `<Skeleton className="h-4 w-full" />`
+
+**Utilities:**
+- `cn()` - Merges Tailwind classes with conflict resolution (clsx + tailwind-merge)
+- `useToast()` - Hook for managing toast notifications
+
+**Implementation Details:**
+- All components use React.forwardRef for ref forwarding
+- TypeScript types exported for all components
+- Radix UI primitives provide accessibility features
+- CVA manages component variants with type safety
+- Tailwind CSS for styling with consistent design tokens
+- Global TooltipProvider and Toaster in App.tsx
+
+**Usage Example:**
+```typescript
+import { Button } from '@/components/ui/Button';
+import { useToast } from '@/hooks/useToast';
+
+function MyComponent() {
+  const { toast } = useToast();
+  
+  return (
+    <Button 
+      variant="default" 
+      onClick={() => toast({ title: 'Success!' })}
+    >
+      Click me
+    </Button>
+  );
+}
+```
+
+**Mobile Responsiveness:**
+- All components responsive by default
+- Touch-friendly tap targets (min 44x44px)
+- Swipe gestures for dismissible components
+- Adaptive layouts for small screens
 
 
 **State Management:**
 - `/packages/dashboard/src/context/AuthContext.tsx` - Global auth state (user, token, login/logout)
+- `/packages/dashboard/src/store/useStore.ts` - Zustand store for UI state (sidebar, preferences)
 - Uses React Context API for auth state
+- Uses Zustand for global UI state with localStorage persistence
+- Uses React Query for server state with optimistic updates and caching
 - LocalStorage for token persistence
-- No external state management library
 
 **Custom Hooks:**
 - `/packages/dashboard/src/hooks/useApi.ts` - API calls with auth headers
+- `/packages/dashboard/src/hooks/useToast.ts` - Toast notification management
 
 **Validation:**
 - `/packages/dashboard/src/lib/validation.ts` - Zod schemas for form validation
   - `namespaceSchema` - Validates namespace names (lowercase alphanumeric + hyphens, starts with letter, 1-50 chars)
   - Type-safe form data with TypeScript inference
+
+**Utilities:**
+- `/packages/dashboard/src/lib/utils.ts` - Utility functions
+  - `cn()` - Merges Tailwind classes with clsx and tailwind-merge for conflict resolution
 
 **Services:**
 - `/packages/dashboard/src/services/api.ts` - HTTP client for backend API
@@ -1812,6 +1948,15 @@ aws cloudfront create-invalidation \
 - `react-hook-form` v7.48 - Form state management and validation
 - `zod` v3.22.4 - Schema validation for forms
 - `@hookform/resolvers` v3.3.2 - Zod resolver for React Hook Form
+- `zustand` v4.4.7 - Global state management with persistence
+- `@tanstack/react-query` v5.90.12 - Server state management with caching and optimistic updates
+- `@radix-ui/react-dialog` v1.0.5 - Accessible dialog primitives
+- `@radix-ui/react-dropdown-menu` v2.0.6 - Accessible dropdown menu primitives
+- `@radix-ui/react-toast` v1.1.5 - Accessible toast notification primitives
+- `@radix-ui/react-tooltip` v1.0.7 - Accessible tooltip primitives
+- `class-variance-authority` v0.7.0 - Component variant management
+- `clsx` v2.0.0 - Conditional className utility
+- `tailwind-merge` v2.0.0 - Tailwind class merging utility
 - `tailwindcss` - Utility-first CSS
 - `vite` - Build tool and dev server
 

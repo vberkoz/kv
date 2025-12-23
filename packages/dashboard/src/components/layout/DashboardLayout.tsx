@@ -1,6 +1,7 @@
 import { useState, ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { Button } from '../ui/Button';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { logout } = useAuth();
@@ -85,15 +86,16 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           ))}
         </nav>
         <div className="p-4 border-t">
-          <button 
-            onClick={logout} 
-            className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 font-medium"
+          <Button 
+            onClick={logout}
+            variant="outline"
+            className="w-full justify-center"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
             Logout
-          </button>
+          </Button>
         </div>
       </aside>
 
