@@ -17,6 +17,10 @@ const baseHandler = async (event: any) => {
     ExpressionAttributeValues: {
       ':pk': `USER#${userId}`,
       ':sk': 'APIKEY#'
+    },
+    ProjectionExpression: 'apiKeyId, #name, permissions, expiresAt, lastUsedAt, createdAt',
+    ExpressionAttributeNames: {
+      '#name': 'name'
     }
   }));
 

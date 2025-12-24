@@ -5,9 +5,10 @@ import { validateToken } from './shared/auth';
 import { successResponse, errorResponse } from './shared/response';
 
 export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
+  const origin = event.headers.origin || event.headers.Origin;
+  
   try {
     const token = event.headers.authorization?.replace('Bearer ', '');
-    const origin = event.headers.origin || event.headers.Origin;
     if (!token) return errorResponse('Missing token', 401, undefined, origin);
 
     const user = await validateToken(token);
@@ -19,6 +20,10 @@ export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
       ExpressionAttributeValues: {
         ':pk': `USER#${user.userId}`,
         ':sk': 'NS#'
+      },
+      ProjectionExpression: '#name, createdAt',
+      ExpressionAttributeNames: {
+        '#name': 'name'
       }
     }));
 
@@ -29,7 +34,7 @@ export async function handler(event: APIGatewayEvent): Promise<APIResponse> {
 
     return successResponse({ namespaces }, 200, undefined, undefined, origin);
   } catch (error: any) {
-    const origin = event.headers.origin;
+    console.error('List namespaces error:', error);
     if (error.message === 'Unauthorized') {
       return errorResponse('Unauthorized', 401, undefined, origin);
     }

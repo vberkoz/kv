@@ -28,6 +28,10 @@ export async function validateToken(token: string): Promise<AuthenticatedUser> {
       ExpressionAttributeValues: {
         ':pk': `USER#${userId}`,
         ':sk': 'PROFILE'
+      },
+      ProjectionExpression: 'userId, #plan, email',
+      ExpressionAttributeNames: {
+        '#plan': 'plan'
       }
     }));
 
@@ -55,6 +59,7 @@ export async function validateToken(token: string): Promise<AuthenticatedUser> {
     }
 
     const user = result.Items[0];
+    
     return {
       userId: user.userId,
       plan: user.plan || 'free',
@@ -78,6 +83,11 @@ export async function validateApiKey(apiKey: string): Promise<AuthenticatedUser 
     ExpressionAttributeValues: {
       ':pk': `APIKEY#${hashedKey}`,
       ':sk': 'METADATA'
+    },
+    ProjectionExpression: 'PK, SK, userId, #permissions, expiresAt, #plan',
+    ExpressionAttributeNames: {
+      '#plan': 'plan',
+      '#permissions': 'permissions'
     }
   }));
 
@@ -116,6 +126,10 @@ export async function validateApiKey(apiKey: string): Promise<AuthenticatedUser 
     ExpressionAttributeValues: {
       ':pk': `USER#${userId}`,
       ':sk': 'PROFILE'
+    },
+    ProjectionExpression: '#plan, email, trialEndsAt',
+    ExpressionAttributeNames: {
+      '#plan': 'plan'
     }
   }));
 

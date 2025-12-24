@@ -1,0 +1,13 @@
+{
+  "KVAuthStack": {
+    "UserPoolClientId": "68n5qnlvq7kvetbgdu6gmin5ro",
+    "ExportsOutputRefKVUserPoolKVAppClientFB7B5A876CE15D0D": "68n5qnlvq7kvetbgdu6gmin5ro",
+    "UserPoolId": "us-east-1_JNj1Nc3I6",
+    "ExportsOutputRefKVUserPool422A1145830A9B19": "us-east-1_JNj1Nc3I6",
+    "CognitoDomain": "https://auth.kv.vberkoz.com"
+  },
+  "KVDatabaseStack": {
+    "ExportsOutputFnGetAttKVStorageTableE2C1F0DBArn2E64A593": "arn:aws:dynamodb:us-east-1:653268860643:table/kv-storage-data",
+    "ExportsOutputRefKVStorageTableE2C1F0DBB4DC9842": "kv-storage-data"
+  }
+}

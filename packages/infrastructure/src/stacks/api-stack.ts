@@ -1,6 +1,6 @@
 import { Stack, StackProps, CfnOutput, Duration } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { HttpApi, HttpMethod, CorsHttpMethod, DomainName } from 'aws-cdk-lib/aws-apigatewayv2';
+import { HttpApi, HttpMethod, CorsHttpMethod, DomainName, PayloadFormatVersion } from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpJwtAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
@@ -127,25 +127,33 @@ export class ApiStack extends Stack {
     this.api.addRoutes({
       path: '/v1/{namespace}',
       methods: [HttpMethod.GET],
-      integration: new HttpLambdaIntegration('ListKeysIntegration', props.listKeys)
+      integration: new HttpLambdaIntegration('ListKeysIntegration', props.listKeys, {
+        payloadFormatVersion: PayloadFormatVersion.VERSION_2_0
+      })
     });
     
     this.api.addRoutes({
       path: '/v1/{namespace}/{key}',
       methods: [HttpMethod.GET],
-      integration: new HttpLambdaIntegration('GetValueIntegration', props.getValue)
+      integration: new HttpLambdaIntegration('GetValueIntegration', props.getValue, {
+        payloadFormatVersion: PayloadFormatVersion.VERSION_2_0
+      })
     });
 
     this.api.addRoutes({
       path: '/v1/{namespace}/{key}',
       methods: [HttpMethod.PUT],
-      integration: new HttpLambdaIntegration('PutValueIntegration', props.putValue)
+      integration: new HttpLambdaIntegration('PutValueIntegration', props.putValue, {
+        payloadFormatVersion: PayloadFormatVersion.VERSION_2_0
+      })
     });
 
     this.api.addRoutes({
       path: '/v1/{namespace}/{key}',
       methods: [HttpMethod.DELETE],
-      integration: new HttpLambdaIntegration('DeleteValueIntegration', props.deleteValue)
+      integration: new HttpLambdaIntegration('DeleteValueIntegration', props.deleteValue, {
+        payloadFormatVersion: PayloadFormatVersion.VERSION_2_0
+      })
     });
 
     this.api.addRoutes({
