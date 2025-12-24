@@ -1,34 +1,42 @@
 # Dependencies
 node_modules/
+.pnp
+.pnp.js
 
-# Build outputs
+# Testing
+coverage/
+
+# Production
 dist/
 build/
 .next/
 out/
-*.tsbuildinfo
+
+# CDK
+.cdk.staging/
+cdk.out/
 
 # Environment
 .env
 .env.local
 .env.*.local
 
-# AWS
-cdk.out/
-.cdk.staging/
-*.js.map
-
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
 # OS
 .DS_Store
 Thumbs.db
 
 # Logs
-logs/
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Misc
+.astro/
