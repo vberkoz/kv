@@ -5,6 +5,7 @@ Serverless key-value storage API powered by AWS DynamoDB. Simple REST API for st
 ## Features
 
 - **Simple REST API**: Store, retrieve, list, and delete JSON data
+- **Interactive API Docs**: OpenAPI 3.0 spec with Swagger UI
 - **Namespace Isolation**: Organize data with namespaces
 - **User Authentication**: Cognito-based auth with API key management
 - **Usage Tracking**: Monitor API calls and storage usage
@@ -193,7 +194,9 @@ See [PRICING-STRATEGY.md](./PRICING-STRATEGY.md) for details.
 
 ## Documentation
 
-- [Deployment Guide](./DEPLOYMENT.md)
+- [API Documentation](https://kv.vberkoz.com/docs/api-docs) - Interactive Swagger UI
+- [OpenAPI Spec](https://api.kv.vberkoz.com/v1/openapi.json) - OpenAPI 3.0 JSON
+- [Getting Started](https://kv.vberkoz.com/docs/getting-started) - Complete guide
 - [Launch Checklist](./LAUNCH-CHECKLIST.md)
 - [AWS Cost Analysis](./AWS-COST-ANALYSIS.md)
 - [Pricing Strategy](./PRICING-STRATEGY.md)

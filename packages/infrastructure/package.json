@@ -11,6 +11,7 @@
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^7.3.4",
     "@aws-lambda-powertools/logger": "^1.18.1",
     "@aws-lambda-powertools/tracer": "^1.18.1",
     "@aws-sdk/client-dynamodb": "^3.400.0",
@@ -34,6 +35,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@types/aws-lambda": "^8.10.159",
     "@types/bcryptjs": "^2.4.2",
     "@types/jsonwebtoken": "^9.0.2",
     "@types/node": "^20.0.0",

@@ -27,6 +27,7 @@ export class LambdaStack extends Stack {
   public readonly getUsage: NodejsFunction;
   public readonly paddleWebhook: NodejsFunction;
   public readonly resetUsage: NodejsFunction;
+  public readonly openapiSpec: NodejsFunction;
 
   constructor(scope: Construct, id: string, props: LambdaStackProps) {
     super(scope, id, props);
@@ -193,6 +194,15 @@ export class LambdaStack extends Stack {
       actions: ['ses:SendEmail'],
       resources: ['*']
     }));
+
+    this.openapiSpec = new NodejsFunction(this, 'OpenAPISpecFunction', {
+      entry: 'src/lambdas/openapi-spec.ts',
+      handler: 'handler',
+      runtime: Runtime.NODEJS_18_X,
+      timeout: Duration.seconds(5),
+      environment,
+      bundling
+    });
 
     const resetRule = new Rule(this, 'MonthlyResetRule', {
       schedule: Schedule.cron({ day: '1', hour: '0', minute: '0' })

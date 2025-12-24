@@ -2,7 +2,7 @@
 
 **Project Name:** KV Storage  
 **Tagline:** Serverless key-value storage API  
-**Status:** Implementation complete, UI/UX Phase 1 deployed, Error Handling & Logging implemented, Lambda Best Practices implemented, API Rate Limiting implemented, State Management implemented, UI Component Library implemented, Error Boundaries implemented, Code Splitting & Lazy Loading implemented, Accessibility (a11y) implemented, Unit Testing implemented, Code Quality Tools implemented, Load Testing Improvements implemented, API Key Security implemented, Content Security Policy implemented, CORS Hardening implemented, ready for launch
+**Status:** Implementation complete, UI/UX Phase 1 deployed, Error Handling & Logging implemented, Lambda Best Practices implemented, API Rate Limiting implemented, State Management implemented, UI Component Library implemented, Error Boundaries implemented, Code Splitting & Lazy Loading implemented, Accessibility (a11y) implemented, Unit Testing implemented, Code Quality Tools implemented, Load Testing Improvements implemented, API Key Security implemented, Content Security Policy implemented, CORS Hardening implemented, API Documentation implemented, Public Documentation expanded, Starlight Docs Site deployed to docs.kv.vberkoz.com, ready for launch
 
 ## Core Value Proposition
 
@@ -91,6 +91,7 @@ kv-storage/
 │   ├── infrastructure/      # AWS CDK stacks + Lambda handlers
 │   ├── landing/             # Astro landing pages (SEO optimized)
 │   ├── dashboard/           # React dashboard SPA
+│   ├── docs/                # Starlight documentation site
 │   └── sdk-js/              # JavaScript/TypeScript client SDK
 ├── prompts/                 # Development prompts and guides
 ├── package.json             # Root workspace configuration
@@ -104,7 +105,8 @@ kv-storage/
 2. **@kv/infrastructure** - AWS CDK infrastructure code and Lambda function handlers
 3. **@kv/landing** - Astro-based landing page, documentation, and pricing pages
 4. **@kv/dashboard** - React-based user dashboard for managing namespaces and API keys
-5. **@kv-storage/client** - Official JavaScript/TypeScript SDK for consuming the API
+5. **@kv/docs** - Starlight documentation site deployed to docs.kv.vberkoz.com
+6. **@kv-storage/client** - Official JavaScript/TypeScript SDK for consuming the API
 
 ## Subscription Plans
 
@@ -198,7 +200,9 @@ packages/infrastructure/
 - `/packages/infrastructure/src/app.ts` - CDK app entry point
 - `/packages/infrastructure/src/stacks/` - All infrastructure stacks
 - `/packages/infrastructure/src/lambdas/` - All Lambda handlers
+- `/packages/infrastructure/src/lambdas/openapi-spec.ts` - OpenAPI spec endpoint handler
 - `/packages/infrastructure/src/lambdas/shared/` - Shared Lambda utilities
+  - `openapi.ts` - OpenAPI 3.0 spec generator from Zod schemas
   - `logger.ts` - Structured logging with correlation IDs
   - `errors.ts` - Custom error classes
   - `auth.ts` - Authentication and authorization
@@ -317,6 +321,36 @@ packages/dashboard/
 
 ### Root Configuration
 
+**Documentation:**
+- `README.md` - Project overview and quick start
+- `PROJECT-CONTEXT.md` - Complete project documentation (this file)
+- `LAUNCH-CHECKLIST.md` - Pre-launch checklist
+- `AWS-COST-ANALYSIS.md` - Cost breakdown and projections
+- `PRICING-STRATEGY.md` - Pricing analysis and recommendations
+- `PRODUCT-HUNT.md` - Product Hunt launch strategy
+- `packages/sdk-js/README.md` - JavaScript SDK documentation
+
+**Public Documentation (Landing Site):**
+- `/docs` - Documentation home with navigation
+- `/docs/getting-started` - Complete onboarding guide (2 min to first API call)
+- `/docs/quickstart` - Fast track for experienced developers
+- `/docs/api-reference` - Manual API documentation
+- `/docs/api-docs` - Interactive Swagger UI with live testing
+- `/docs/examples` - Code examples and use cases
+- `/pricing` - Current pricing page
+- `/pricing-new` - Updated pricing with recommended tiers
+
+**Starlight Documentation Site (docs.kv.vberkoz.com):**
+- `/` - Documentation home with quick links
+- `/getting-started/introduction` - Introduction to KV Storage
+- `/getting-started/quickstart` - Quick start guide
+- `/getting-started/authentication` - Authentication guide
+- `/api/rest` - REST API reference
+- `/api/javascript` - JavaScript SDK reference
+- `/api/rate-limits` - Rate limits documentation
+- `/guides/use-cases` - Common use cases
+- `/guides/best-practices` - Best practices guide
+
 **Key Files:**
 - `.env` / `.env.example` - Environment variables
 - `package.json` - Workspace configuration and scripts
@@ -361,9 +395,12 @@ packages/dashboard/
 
 ### API Endpoints
 
-**Authentication Endpoints (JWT Required):**
+**API Endpoints (JWT Required):**
 - `POST /v1/auth/signup` → `/packages/infrastructure/src/lambdas/signup.ts`
 - `POST /v1/auth/login` → `/packages/infrastructure/src/lambdas/login.ts`
+
+**API Documentation:**
+- `GET /v1/openapi.json` → `/packages/infrastructure/src/lambdas/openapi-spec.ts` (OpenAPI 3.0 spec)
 
 **Namespace Management (JWT Required):**
 - `POST /v1/namespaces` → `/packages/infrastructure/src/lambdas/create-namespace.ts`
@@ -500,6 +537,14 @@ packages/dashboard/
 - `putValueSchema` - Request schema for storing values
 - `validate<T>(schema, data)` - Helper function for validation with error messages
 
+**openapi.ts** - OpenAPI 3.0 Spec Generation
+- Auto-generates OpenAPI spec from Zod validation schemas
+- Registers all API endpoints with request/response schemas
+- Includes security schemes (JWT Bearer, API Key)
+- Provides interactive documentation via Swagger UI
+- Keeps API docs in sync with code validation
+- Library: @asteasolutions/zod-to-openapi v7.0.0+
+
 ### Authentication Flow
 
 **JWT Authentication (Dashboard):**
@@ -625,6 +670,39 @@ try {
 ```
 
 **File Location:** `/packages/infrastructure/src/lambdas/shared/errors.ts`, `/packages/infrastructure/src/lambdas/shared/response.ts`
+
+### API Documentation
+
+**OpenAPI 3.0 Specification:**
+- Auto-generated from Zod validation schemas
+- Keeps documentation in sync with code
+- Includes all endpoints, request/response schemas, and security schemes
+- Served at `GET /v1/openapi.json`
+
+**Interactive Documentation:**
+- Swagger UI integration at `/docs/api-docs`
+- Live API testing with "Try it out" feature
+- Request/response examples for all endpoints
+- Security scheme configuration (JWT Bearer, API Key)
+
+**Implementation:**
+- Library: @asteasolutions/zod-to-openapi v7.0.0+
+- Generator: `/packages/infrastructure/src/lambdas/shared/openapi.ts`
+- Lambda handler: `/packages/infrastructure/src/lambdas/openapi-spec.ts`
+- Swagger UI page: `/packages/landing/src/pages/docs/api-docs.astro`
+
+**Features:**
+- Automatic schema generation from Zod validators
+- Type-safe API documentation
+- Version control for API changes
+- No manual documentation maintenance
+- Interactive testing environment
+
+**File Locations:**
+- OpenAPI generator: `/packages/infrastructure/src/lambdas/shared/openapi.ts`
+- Spec endpoint: `/packages/infrastructure/src/lambdas/openapi-spec.ts`
+- Interactive docs: `/packages/landing/src/pages/docs/api-docs.astro`
+- Validation schemas: `/packages/infrastructure/src/lambdas/shared/validation.ts`
 
 ### Logging & Monitoring
 
@@ -859,9 +937,12 @@ lastUpdated: ISO timestamp
 **Pages (File-based Routing):**
 - `/packages/landing/src/pages/index.astro` - Homepage with hero, features, CTA
 - `/packages/landing/src/pages/pricing.astro` - Pricing tiers and comparison
+- `/packages/landing/src/pages/pricing-new.astro` - Updated pricing with recommended tiers
 - `/packages/landing/src/pages/docs/index.astro` - Documentation home
-- `/packages/landing/src/pages/docs/quickstart.astro` - Getting started guide
+- `/packages/landing/src/pages/docs/getting-started.astro` - Complete getting started guide
+- `/packages/landing/src/pages/docs/quickstart.astro` - Fast track guide
 - `/packages/landing/src/pages/docs/api-reference.astro` - API documentation
+- `/packages/landing/src/pages/docs/api-docs.astro` - Interactive API docs (Swagger UI)
 - `/packages/landing/src/pages/docs/examples.astro` - Code examples
 
 **Components:**
@@ -2178,6 +2259,7 @@ aws cloudfront create-invalidation \
 - `rate-limiter-flexible` v3.0.0+ - Token bucket rate limiting
 - `crypto` (built-in) - API key hashing and UUID generation
 - `zod` v3.22.4 - Runtime type validation and input sanitization
+- `@asteasolutions/zod-to-openapi` v7.0.0+ - OpenAPI spec generation from Zod schemas
 
 **Infrastructure (CDK):**
 - `aws-cdk-lib` - AWS CDK v2 constructs

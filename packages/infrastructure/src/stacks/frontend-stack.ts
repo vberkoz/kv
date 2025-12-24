@@ -229,3 +229,102 @@ function handler(event) {
     });
   }
 }
+
+export class DocsStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
+    super(scope, id, props);
+
+    const baseDomain = process.env.DOMAIN_NAME || 'vberkoz.com';
+    const docsDomain = `docs.kv.${baseDomain}`;
+    const hostedZone = HostedZone.fromLookup(this, 'HostedZone', {
+      domainName: baseDomain
+    });
+
+    const certificate = new Certificate(this, 'DocsCertificate', {
+      domainName: docsDomain,
+      validation: CertificateValidation.fromDns(hostedZone)
+    });
+
+    const bucket = new Bucket(this, 'DocsBucket', {
+      removalPolicy: RemovalPolicy.DESTROY,
+      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+      publicReadAccess: false
+    });
+
+    const oai = new OriginAccessIdentity(this, 'DocsOAI');
+    bucket.grantRead(oai);
+
+    const cfFunction = new CfFunction(this, 'DocsIndexHtmlFunction', {
+      code: FunctionCode.fromInline(`
+        function handler(event) {
+          var request = event.request;
+          var uri = request.uri;
+
+          if (uri.endsWith("/")) {
+            request.uri += "index.html";
+          } else if (!uri.includes(".")) {
+            request.uri += "/index.html";
+          }
+
+          return request;
+        }
+      `)
+    });
+
+    const securityHeadersPolicy = new ResponseHeadersPolicy(this, 'DocsSecurityHeaders', {
+      securityHeadersBehavior: {
+        contentTypeOptions: { override: true },
+        frameOptions: { frameOption: HeadersFrameOption.DENY, override: true },
+        referrerPolicy: { referrerPolicy: HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN, override: true },
+        strictTransportSecurity: { accessControlMaxAge: Duration.seconds(31536000), includeSubdomains: true, override: true },
+        xssProtection: { protection: true, modeBlock: true, override: true },
+        contentSecurityPolicy: {
+          contentSecurityPolicy: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests",
+          override: true
+        }
+      }
+    });
+
+    const distribution = new Distribution(this, 'DocsDistribution', {
+      domainNames: [docsDomain],
+      certificate,
+      defaultBehavior: {
+        origin: S3BucketOrigin.withOriginAccessIdentity(bucket, { originAccessIdentity: oai }),
+        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        responseHeadersPolicy: securityHeadersPolicy,
+        functionAssociations: [{
+          function: cfFunction,
+          eventType: FunctionEventType.VIEWER_REQUEST
+        }]
+      },
+      defaultRootObject: 'index.html',
+      errorResponses: [
+        { httpStatus: 404, responseHttpStatus: 200, responsePagePath: '/index.html', ttl: Duration.minutes(5) },
+        { httpStatus: 403, responseHttpStatus: 200, responsePagePath: '/index.html', ttl: Duration.minutes(5) }
+      ]
+    });
+
+    new ARecord(this, 'DocsAliasRecord', {
+      zone: hostedZone,
+      recordName: docsDomain,
+      target: RecordTarget.fromAlias(new CloudFrontTarget(distribution))
+    });
+
+    new BucketDeployment(this, 'DeployDocs', {
+      sources: [Source.asset('../docs/dist')],
+      destinationBucket: bucket,
+      distribution,
+      distributionPaths: ['/*']
+    });
+
+    new CfnOutput(this, 'DocsUrl', {
+      value: `https://${docsDomain}`,
+      description: 'Docs URL'
+    });
+
+    new CfnOutput(this, 'DocsBucketName', {
+      value: bucket.bucketName,
+      description: 'Docs S3 Bucket Name'
+    });
+  }
+}

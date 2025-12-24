@@ -12,4 +12,64 @@ import CodeExample from '../components/CodeExample.astro';
   <Hero />
   <Features />
   <CodeExample />
+  
+  <section class="py-20 px-4 bg-white">
+    <div class="max-w-6xl mx-auto">
+      <h2 class="text-4xl font-bold text-center mb-4">Simple Pricing</h2>
+      <p class="text-xl text-gray-600 text-center mb-12">Start free, scale as you grow</p>
+      <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div class="border rounded-lg p-6">
+          <h3 class="text-xl font-bold mb-3">Free</h3>
+          <p class="text-3xl font-bold mb-4">$0<span class="text-base">/mo</span></p>
+          <ul class="space-y-2 mb-6 text-sm text-gray-600">
+            <li>10K requests/month</li>
+            <li>100MB storage</li>
+            <li>Community support</li>
+          </ul>
+          <a href="https://dashboard.kv.vberkoz.com/login" class="block text-center bg-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300 text-sm">Get Started</a>
+        </div>
+        <div class="border rounded-lg p-6">
+          <h3 class="text-xl font-bold mb-3">Starter</h3>
+          <p class="text-3xl font-bold mb-4">$5<span class="text-base">/mo</span></p>
+          <ul class="space-y-2 mb-6 text-sm text-gray-600">
+            <li>100K requests/month</li>
+            <li>1GB storage</li>
+            <li>Email support</li>
+          </ul>
+          <a href="https://dashboard.kv.vberkoz.com/login" class="block text-center bg-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300 text-sm">Upgrade</a>
+        </div>
+        <div class="border-2 border-blue-600 rounded-lg p-6 relative">
+          <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold">Popular</div>
+          <h3 class="text-xl font-bold mb-3">Pro</h3>
+          <p class="text-3xl font-bold mb-4">$15<span class="text-base">/mo</span></p>
+          <ul class="space-y-2 mb-6 text-sm text-gray-600">
+            <li>1M requests/month</li>
+            <li>10GB storage</li>
+            <li>Priority support</li>
+          </ul>
+          <a href="https://dashboard.kv.vberkoz.com/login" class="block text-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">Upgrade</a>
+        </div>
+        <div class="border rounded-lg p-6">
+          <h3 class="text-xl font-bold mb-3">Scale</h3>
+          <p class="text-3xl font-bold mb-4">$49<span class="text-base">/mo</span></p>
+          <ul class="space-y-2 mb-6 text-sm text-gray-600">
+            <li>10M requests/month</li>
+            <li>100GB storage</li>
+            <li>99.9% SLA</li>
+          </ul>
+          <a href="https://dashboard.kv.vberkoz.com/login" class="block text-center bg-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300 text-sm">Upgrade</a>
+        </div>
+        <div class="border rounded-lg p-6">
+          <h3 class="text-xl font-bold mb-3">Business</h3>
+          <p class="text-3xl font-bold mb-4">$149<span class="text-base">/mo</span></p>
+          <ul class="space-y-2 mb-6 text-sm text-gray-600">
+            <li>Custom requests</li>
+            <li>Custom storage</li>
+            <li>Dedicated support</li>
+          </ul>
+          <a href="mailto:support@kv.vberkoz.com" class="block text-center bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 text-sm">Contact Sales</a>
+        </div>
+      </div>
+    </div>
+  </section>
 </Layout>

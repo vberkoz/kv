@@ -21,6 +21,7 @@ interface ApiStackProps extends StackProps {
   getApiKey: NodejsFunction;
   getUsage: NodejsFunction;
   paddleWebhook: NodejsFunction;
+  openapiSpec: NodejsFunction;
   userPoolId: string;
   userPoolClientId: string;
 }
@@ -145,6 +146,12 @@ export class ApiStack extends Stack {
       path: '/v1/{namespace}/{key}',
       methods: [HttpMethod.DELETE],
       integration: new HttpLambdaIntegration('DeleteValueIntegration', props.deleteValue)
+    });
+
+    this.api.addRoutes({
+      path: '/v1/openapi.json',
+      methods: [HttpMethod.GET],
+      integration: new HttpLambdaIntegration('OpenAPISpecIntegration', props.openapiSpec)
     });
 
     new ARecord(this, 'ApiAliasRecord', {

@@ -5,7 +5,7 @@ import { App } from 'aws-cdk-lib';
 import { DatabaseStack } from './stacks/database-stack';
 import { LambdaStack } from './stacks/lambda-stack';
 import { ApiStack } from './stacks/api-stack';
-import { LandingStack, DashboardStack } from './stacks/frontend-stack';
+import { LandingStack, DashboardStack, DocsStack } from './stacks/frontend-stack';
 import { MonitoringStack } from './stacks/monitoring-stack';
 import { AuthStack } from './stacks/auth-stack';
 
@@ -51,6 +51,7 @@ const apiStack = new ApiStack(app, 'KVApiStack', {
   getApiKey: lambdaStack.getApiKey,
   getUsage: lambdaStack.getUsage,
   paddleWebhook: lambdaStack.paddleWebhook,
+  openapiSpec: lambdaStack.openapiSpec,
   userPoolId: authStack.userPool.userPoolId,
   userPoolClientId: authStack.userPoolClient.userPoolClientId,
   env: {
@@ -76,8 +77,16 @@ const dashboardStack = new DashboardStack(app, 'KVDashboardStack', {
   }
 });
 
+const docsStack = new DocsStack(app, 'KVDocsStack', {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION || 'us-east-1'
+  }
+});
+
 landingStack.addDependency(apiStack);
 dashboardStack.addDependency(apiStack);
+docsStack.addDependency(apiStack);
 
 const monitoringStack = new MonitoringStack(app, 'KVMonitoringStack', {
   api: apiStack.api,
